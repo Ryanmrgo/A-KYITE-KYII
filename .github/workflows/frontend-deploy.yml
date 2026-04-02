@@ -23,6 +23,8 @@ jobs:
 
       - name: Install and Build React App
         # Walk into the frontend folder, install dependencies, and build the Vite project
+        env:
+          VITE_API_URL: http://${{ secrets.AWS_HOST }}
         run: |
           cd frontend
           npm install
