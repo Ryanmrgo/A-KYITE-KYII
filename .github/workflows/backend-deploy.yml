@@ -1,0 +1,47 @@
+name: Deploy Backend to AWS
+
+on:
+  push:
+    branches:
+      - main
+    # THE MONOREPO TWEAK: Only run this robot if files inside the backend folder change!
+    paths:
+      - 'backend/**' 
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Log in to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+
+      - name: Build and Push Docker Image
+        # Notice we have to `cd backend` first because of the monorepo structure
+        run: |
+          cd backend
+          docker build -t ${{ secrets.DOCKER_USERNAME }}/movie-backend:latest .
+          docker push ${{ secrets.DOCKER_USERNAME }}/movie-backend:latest
+
+      - name: Deploy to AWS EC2
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.AWS_HOST }}
+          username: ${{ secrets.AWS_USERNAME }}
+          key: ${{ secrets.AWS_PRIVATE_KEY }}
+          script: |
+            sudo docker pull ${{ secrets.DOCKER_USERNAME }}/movie-backend:latest
+            
+            # Stop the old backend (if it exists)
+            sudo docker stop movie-backend-live || true
+            sudo docker rm movie-backend-live || true
+            
+            # Run the new backend! 
+            # Note: We map EC2 Port 80 directly to Container Port 5000
+            sudo docker run -d --name movie-backend-live -p 80:5000 ${{ secrets.DOCKER_USERNAME }}/movie-backend:latest
