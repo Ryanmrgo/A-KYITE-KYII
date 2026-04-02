@@ -28,8 +28,6 @@ jobs:
           cd backend
           docker build -t ${{ secrets.DOCKER_USERNAME }}/movie-backend:latest .
           docker push ${{ secrets.DOCKER_USERNAME }}/movie-backend:latest
-          # Run the new backend with the injected secrets!
-          sudo docker run -d --name movie-backend-live -p 80:5000 -e TMDB_API_KEY=${{ secrets.TMDB_API_KEY }} ${{ secrets.DOCKER_USERNAME }}/movie-backend:latest
 
       - name: Deploy to AWS EC2
         uses: appleboy/ssh-action@master
@@ -44,6 +42,5 @@ jobs:
             sudo docker stop movie-backend-live || true
             sudo docker rm movie-backend-live || true
             
-            # Run the new backend! 
-            # Note: We map EC2 Port 80 directly to Container Port 5000
-            sudo docker run -d --name movie-backend-live -p 80:5000 ${{ secrets.DOCKER_USERNAME }}/movie-backend:latest
+            # Run the new backend with the secret key!
+            sudo docker run -d --name movie-backend-live -p 80:5000 -e TMDB_API_KEY=${{ secrets.TMDB_API_KEY }} ${{ secrets.DOCKER_USERNAME }}/movie-backend:latest
