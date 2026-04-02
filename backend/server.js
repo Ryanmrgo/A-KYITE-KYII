@@ -24,9 +24,9 @@ app.use('/api/tmdb', async (req, res) => {
         if (!endpoint) return res.status(400).json({ error: 'Endpoint is required' });
 
         const queryParams = new URLSearchParams(req.query).toString();
-        
+
         const tmdbUrl = `https://api.themoviedb.org/3/${endpoint}?${queryParams}`;
-        
+
         const response = await axios.get(tmdbUrl, {
             headers: {
                 Authorization: `Bearer ${process.env.TMDB_API_KEY}`,
@@ -43,3 +43,5 @@ app.use('/api/tmdb', async (req, res) => {
 app.listen(PORT, () => {
     console.log(`Server is running on port ${PORT}`);
 });
+
+//Hey
