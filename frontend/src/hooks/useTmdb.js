@@ -5,6 +5,7 @@ const BASE_URL = `${apiUrl}/api/tmdb`;
 const IMAGE_BASE = "https://image.tmdb.org/t/p";
 
 function tmdbFetch(path) {
+  console.log(`[Frontend Fetching] URL: ${BASE_URL}${path}`);
   // path usually starts with a slash like '/movie/popular'
   return fetch(`${BASE_URL}${path}`, {
     headers: {

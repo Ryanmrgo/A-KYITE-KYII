@@ -18,6 +18,7 @@ app.use(express.json());
 // Proxy route for TMDB
 // Using a generic route that captures all requests to /api/tmdb/...
 app.use('/api/tmdb', async (req, res) => {
+    console.log(`[Backend Proxy] Request received: ${req.url}`);
     try {
         // Extract the endpoint from the incoming URL (e.g., /movie/popular)
         const endpoint = req.url.split('?')[0].replace(/^\//, '');
@@ -44,4 +45,4 @@ app.listen(PORT, () => {
     console.log(`Server is running on port ${PORT}`);
 });
 
-//df
+//d
