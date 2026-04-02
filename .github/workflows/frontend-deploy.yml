@@ -1,0 +1,42 @@
+name: Deploy Frontend to AWS S3
+
+on:
+  push:
+    branches:
+      - main
+    # Wake up ONLY if code inside the frontend folder changes!
+    paths:
+      - 'frontend/**'
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install and Build React App
+        # Walk into the frontend folder, install dependencies, and build the Vite project
+        run: |
+          cd frontend
+          npm install
+          npm run build
+
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: us-east-1 # CHANGE THIS if your bucket is in a different region (e.g., ap-south-1)
+
+      - name: Sync files to S3
+        # The 'dist' folder is where Vite puts the final compiled website files.
+        # REPLACE 'YOUR-BUCKET-NAME' with your actual S3 bucket name!
+        run: |
+          aws s3 sync ./frontend/dist s3://YOUR-BUCKET-NAME --delete
