@@ -6,6 +6,11 @@ require('dotenv').config();
 const app = express();
 const PORT = process.env.PORT || 5000;
 
+// Health check route
+app.get('/', (req, res) => {
+    res.send('The Movie Backend API is live and running!');
+});
+
 // Middleware
 app.use(cors());
 app.use(express.json());
