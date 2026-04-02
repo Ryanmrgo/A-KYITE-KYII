@@ -39,4 +39,4 @@ jobs:
         # The 'dist' folder is where Vite puts the final compiled website files.
         # REPLACE 'YOUR-BUCKET-NAME' with your actual S3 bucket name!
         run: |
-          aws s3 sync ./frontend/dist s3://YOUR-BUCKET-NAME --delete
+          aws s3 sync ./frontend/dist s3://movie-streamer-frontend-pasiabey --delete
