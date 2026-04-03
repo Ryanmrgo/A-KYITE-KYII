@@ -44,7 +44,10 @@ jobs:
           aws-region: us-east-1 # CHANGE THIS if your bucket is in a different region (e.g., ap-south-1)
 
       - name: Sync files to S3
-        # The 'dist' folder is where Vite puts the final compiled website files.
-        # REPLACE 'YOUR-BUCKET-NAME' with your actual S3 bucket name!
         run: |
           aws s3 sync ./frontend/dist s3://movie-streamer-frontend-pasiabey --delete
+
+      - name: Invalidate CloudFront Cache
+        # This tells CloudFront to "refresh" instantly so you can see your changes!
+        run: |
+          aws cloudfront create-invalidation --distribution-id E3IX76TN306O63 --paths "/*"
