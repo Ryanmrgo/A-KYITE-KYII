@@ -537,15 +537,14 @@ function ContinueWatchingSection({ items, currentUser }) {
                   e.stopPropagation();
                   e.preventDefault();
                   if (!currentUser?.uid) return;
-                  if (window.confirm("Remove from continue watching?")) {
-                    const key = isMovie ? `m${item.id}` : `t${item.id}`;
-                    try {
-                      await updateDoc(doc(db, "users", currentUser.uid), {
-                        [`watchProgress.${key}`]: deleteField()
-                      });
-                    } catch (err) {
-                      console.error("Failed to remove item:", err);
-                    }
+                  
+                  const key = isMovie ? `m${item.id}` : `t${item.id}`;
+                  try {
+                    await updateDoc(doc(db, "users", currentUser.uid), {
+                      [`watchProgress.${key}`]: deleteField()
+                    });
+                  } catch (err) {
+                    console.error("Failed to remove item:", err);
                   }
                 }}
                 style={{
