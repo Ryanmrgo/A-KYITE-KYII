@@ -47,11 +47,23 @@ export default function MoviePlayer() {
   useWatchProgress(currentUser);
 
   // Resume from saved position if available
-  const savedProgress = getSavedProgress(currentUser?.profile, movieId, "movie");
-  const startFrom = savedProgress ? Math.floor(savedProgress.watched) : 0;
-  const progressPct = savedProgress ? Math.round((savedProgress.watched / savedProgress.duration) * 100) : 0;
+  // We compute this ONCE when the component mounts or the movie ID changes
+  // to avoid refreshing the iframe every time progress is saved.
+  const [playerSrc, setPlayerSrc] = useState(null);
 
-  const playerSrc = `https://vidfast.pro/movie/${movieId}?autoPlay=false${startFrom > 30 ? `&startFrom=${startFrom}` : ""}`;
+  useEffect(() => {
+    if (loading || !movie) return;
+    
+    const saved = getSavedProgress(currentUser?.profile, movieId, "movie");
+    const startAt = saved ? Math.floor(saved.watched) : 0;
+    const url = `https://vidfast.pro/movie/${movieId}?autoPlay=false${startAt > 30 ? `&startFrom=${startAt}` : ""}`;
+    setPlayerSrc(url);
+  }, [movieId, loading, !!movie]);
+
+  // For the UI indicator, we can still use the live progress
+  const nowProgress = getSavedProgress(currentUser?.profile, movieId, "movie");
+  const startFrom = nowProgress ? Math.floor(nowProgress.watched) : 0;
+  const progressPct = nowProgress ? Math.round((nowProgress.watched / (nowProgress.duration || 1)) * 100) : 0;
 
   return (
     <div style={{ minHeight: "100vh", backgroundColor: S.bg, color: S.text, fontFamily: "'Inter', sans-serif", padding: "2rem 1.5rem" }}>

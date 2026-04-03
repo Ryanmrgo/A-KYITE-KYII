@@ -66,12 +66,26 @@ export default function TvPlayer() {
   const activeSeason = selectedSeason ?? firstSeason;
 
   // Build resume startFrom for the current episode
-  const epKey = `s${activeSeason}e${selectedEpisode}`;
-  const epProgress = currentUser?.profile?.watchProgress?.[`t${seriesId}`]?.show_progress?.[epKey];
-  const startFrom = epProgress ? Math.floor(epProgress.progress?.watched || 0) : 0;
-  const progressPct = epProgress ? Math.round(((epProgress.progress?.watched || 0) / (epProgress.progress?.duration || 1)) * 100) : 0;
+  // We compute this whenever the series, season, or episode changes
+  // NOT every time the progress is saved to the database.
+  const [playerSrc, setPlayerSrc] = useState(null);
 
-  const playerSrc = `https://vidfast.pro/tv/${seriesId}/${activeSeason}/${selectedEpisode}?autoPlay=false&nextButton=true&autoNext=true${startFrom > 30 ? `&startFrom=${startFrom}` : ""}`;
+  useEffect(() => {
+    if (loading || !show) return;
+
+    const epKey = `s${activeSeason}e${selectedEpisode}`;
+    const epProgress = currentUser?.profile?.watchProgress?.[`t${seriesId}`]?.show_progress?.[epKey];
+    const startAt = epProgress ? Math.floor(epProgress.progress?.watched || 0) : 0;
+    
+    const url = `https://vidfast.pro/tv/${seriesId}/${activeSeason}/${selectedEpisode}?autoPlay=false&nextButton=true&autoNext=true${startAt > 30 ? `&startFrom=${startAt}` : ""}`;
+    setPlayerSrc(url);
+  }, [seriesId, activeSeason, selectedEpisode, loading, !!show]);
+
+  // For the UI indicator, we can still use the live progress
+  const nowEpKey = `s${activeSeason}e${selectedEpisode}`;
+  const nowEpProgress = currentUser?.profile?.watchProgress?.[`t${seriesId}`]?.show_progress?.[nowEpKey];
+  const startFrom = nowEpProgress ? Math.floor(nowEpProgress.progress?.watched || 0) : 0;
+  const progressPct = nowEpProgress ? Math.round(((nowEpProgress.progress?.watched || 0) / (nowEpProgress.progress?.duration || 1)) * 100) : 0;
   const seasons = (show?.seasons ?? []).filter((s) => s.season_number > 0);
 
   return (
