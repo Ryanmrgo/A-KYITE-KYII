@@ -24,7 +24,7 @@ jobs:
       - name: Install and Build React App
         # Walk into the frontend folder, install dependencies, and build the Vite project
         env:
-          VITE_API_URL: http://${{ secrets.AWS_HOST }}
+          VITE_API_URL: https://d77pd4y9rlvdx.cloudfront.net
           VITE_FIREBASE_API_KEY: ${{ secrets.VITE_FIREBASE_API_KEY }}
           VITE_FIREBASE_AUTH_DOMAIN: ${{ secrets.VITE_FIREBASE_AUTH_DOMAIN }}
           VITE_FIREBASE_PROJECT_ID: ${{ secrets.VITE_FIREBASE_PROJECT_ID }}
