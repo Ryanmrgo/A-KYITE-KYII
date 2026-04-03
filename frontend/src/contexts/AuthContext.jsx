@@ -5,8 +5,8 @@ import {
   signOut, 
   onAuthStateChanged 
 } from "firebase/auth";
+import { onSnapshot, doc, setDoc } from "firebase/firestore";
 import { auth, db } from "../firebase";
-import { doc, setDoc, getDoc } from "firebase/firestore";
 
 const AuthContext = createContext();
 
@@ -18,41 +18,51 @@ export function AuthProvider({ children }) {
   const [currentUser, setCurrentUser] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  // Sign up a new user and add their initial document in Firestore
-  async function signup(email, password, name) {
-    const userCredential = await createUserWithEmailAndPassword(auth, email, password);
-    // Initialize their user document
-    await setDoc(doc(db, "users", userCredential.user.uid), {
-      email: email,
-      name: name,
-      createdAt: new Date().toISOString()
-    });
-    // Immediately fetch profile so the UI instantly updates
-    setCurrentUser({ ...userCredential.user, profile: { email, name }});
-    return userCredential;
-  }
-
-  function login(email, password) {
-    return signInWithEmailAndPassword(auth, email, password);
-  }
-
-  function logout() {
-    return signOut(auth);
-  }
-
   useEffect(() => {
-    // Listen for auth state changes
-    const unsubscribe = onAuthStateChanged(auth, async (user) => {
+    let unsubscribeProfile = null;
+
+    const unsubscribeAuth = onAuthStateChanged(auth, (user) => {
+      // Clean up the old profile listener if we're switching users or logging out
+      if (unsubscribeProfile) {
+        unsubscribeProfile();
+        unsubscribeProfile = null;
+      }
+
       if (user) {
-        const userDoc = await getDoc(doc(db, "users", user.uid));
-        setCurrentUser({ ...user, profile: userDoc.data() });
+        // Set up the real-time profile listener!
+        unsubscribeProfile = onSnapshot(doc(db, "users", user.uid), (doc) => {
+          setCurrentUser({ ...user, profile: doc.data() });
+          setLoading(false);
+        });
       } else {
         setCurrentUser(null);
+        setLoading(false);
       }
-      setLoading(false);
     });
-    return unsubscribe;
+
+    return () => {
+      unsubscribeAuth();
+      if (unsubscribeProfile) unsubscribeProfile();
+    };
   }, []);
+
+  const signup = async (email, password, name) => {
+    const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+    await setDoc(doc(db, "users", userCredential.user.uid), {
+      email,
+      name,
+      createdAt: new Date().toISOString(),
+    });
+    return userCredential;
+  };
+
+  const login = (email, password) => {
+    return signInWithEmailAndPassword(auth, email, password);
+  };
+
+  const logout = () => {
+    return signOut(auth);
+  };
 
   const value = {
     currentUser,
