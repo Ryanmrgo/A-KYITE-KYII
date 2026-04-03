@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useParams, Link } from "react-router-dom";
 import { useMovieDetails, posterUrl, formatRuntime, getTopCast } from "../hooks/useTmdb";
 import { useAuth } from "../contexts/AuthContext";
