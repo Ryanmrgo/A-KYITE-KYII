@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 
-const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+const configuredApiUrl = import.meta.env.VITE_API_URL?.trim();
+const apiUrl = configuredApiUrl || (import.meta.env.DEV ? 'http://localhost:5000' : window.location.origin);
 const BASE_URL = apiUrl + '/api/tmdb';
 const IMAGE_BASE = import.meta.env.VITE_IMAGE_BASE || apiUrl + '/api/image';
 const EMPTY_RESPONSE = { results: [] };
