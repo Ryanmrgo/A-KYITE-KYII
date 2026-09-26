@@ -41,6 +41,49 @@ Deployment is fully automated using GitHub Actions. Any push to the main branch 
 
 ## Local Development Setup
 
+## Shareable Deployment
+
+The repository includes deployment configuration for Render and Vercel:
+
+- `render.yaml` deploys the Express backend with `/health` monitoring.
+- `frontend/vercel.json` keeps React Router routes working on refresh.
+
+### 1. Deploy the backend to Render
+
+1. Push this repository to GitHub.
+2. In Render, choose **New > Blueprint** and select the repository.
+3. Set these environment variables in the backend service:
+
+```env
+TMDB_API_KEY=your_tmdb_key
+CORS_ORIGIN=https://your-frontend.vercel.app
+```
+
+Copy the resulting backend URL, for example `https://movie-stream-backend.onrender.com`.
+
+### 2. Deploy the frontend to Vercel
+
+1. In Vercel, import the same repository.
+2. Set the project root directory to `frontend`.
+3. Use `npm run build` as the build command and `dist` as the output directory.
+4. Add these environment variables before deploying:
+
+```env
+VITE_API_URL=https://movie-stream-backend.onrender.com
+VITE_FIREBASE_API_KEY=your_firebase_api_key
+VITE_FIREBASE_AUTH_DOMAIN=your_firebase_auth_domain
+VITE_FIREBASE_PROJECT_ID=your_firebase_project_id
+VITE_FIREBASE_STORAGE_BUCKET=your_firebase_storage_bucket
+VITE_FIREBASE_MESSAGING_SENDER_ID=your_firebase_sender_id
+VITE_FIREBASE_APP_ID=your_firebase_app_id
+```
+
+After deployment, add the Vercel domain to Firebase Authentication's authorized domains. Then update Render's `CORS_ORIGIN` with the final Vercel URL and redeploy the backend.
+
+Never put `TMDB_API_KEY` in the frontend environment. TMDB data and image requests are protected by the backend proxy.
+
+TMDB's free API access is intended for non-commercial use. Obtain commercial permission from TMDB before monetizing or operating this service commercially. TMDB metadata permission also does not grant rights to stream movie or TV content; verify the licensing terms of the external video provider before sharing publicly.
+
 ### Prerequisites
 - Node.js (v18 or higher)
 - Docker (optional, for backend testing)

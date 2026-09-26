@@ -1,0 +1,13 @@
+services:
+  - type: web
+    name: movie-stream-backend
+    runtime: node
+    rootDir: backend
+    buildCommand: npm ci
+    startCommand: npm start
+    healthCheckPath: /health
+    envVars:
+      - key: TMDB_API_KEY
+        sync: false
+      - key: CORS_ORIGIN
+        sync: false

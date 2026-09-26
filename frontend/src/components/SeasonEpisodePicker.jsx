@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useMemo, useRef } from "react";
 import { useSeasonDetails, stillUrl, formatDate, formatRuntime } from "../hooks/useTmdb";
 
 const S = {
@@ -196,7 +196,7 @@ export default function SeasonEpisodePicker({
   onEpisodeSelect,
 }) {
   const { data: seasonData, loading } = useSeasonDetails(seriesId, selectedSeason);
-  const episodes = seasonData?.episodes ?? [];
+  const episodes = useMemo(() => seasonData?.episodes ?? [], [seasonData]);
 
   const trackRef = useRef(null);
   const [atStart, setAtStart] = useState(true);

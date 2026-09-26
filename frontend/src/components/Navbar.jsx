@@ -52,7 +52,6 @@ export default function Navbar() {
   // Loop animated text
   useEffect(() => {
     if (!currentUser || scrolled) {
-      setGreetingIndex(0);
       return;
     }
     const interval = setInterval(() => {
@@ -116,7 +115,7 @@ export default function Navbar() {
               letterSpacing: "-0.04em", textTransform: "uppercase",
               animation: "fade-in-up 0.4s ease-out",
             }}>
-              CINEMA
+              A KYITE KYI
             </span>
           )}
         </Link>

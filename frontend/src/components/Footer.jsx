@@ -5,7 +5,7 @@ export default function Footer() {
         {/* Brand */}
         <div>
           <span className="text-xl font-black text-red-600 mb-4 block font-headline tracking-tighter uppercase">
-            CINEMA
+            A KYITE KYI
           </span>
           <p className="text-sm tracking-wide text-on-surface-variant max-w-xs mx-auto md:mx-0">
             The premium streaming experience for the true cinephile. Experience
@@ -66,7 +66,7 @@ export default function Footer() {
       {/* Bottom */}
       <div className="max-w-7xl mx-auto px-6 sm:px-8 mt-12 pt-8 border-t border-outline-variant/10 flex flex-col sm:flex-row justify-between items-center gap-4">
         <span className="text-sm tracking-wide text-on-surface-variant/60">
-          © 2025 CINEMA. All rights reserved.
+          © 2025 A KYITE KYI. All rights reserved.
         </span>
         <div className="flex gap-6">
           <span className="material-symbols-outlined text-on-surface-variant hover:text-red-500 cursor-pointer transition-colors">

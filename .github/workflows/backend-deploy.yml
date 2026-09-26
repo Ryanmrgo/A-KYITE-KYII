@@ -43,4 +43,15 @@ jobs:
             sudo docker rm movie-backend-live || true
             
             # Run the new backend with the secret key!
-            sudo docker run -d --name movie-backend-live -p 80:5000 -e TMDB_API_KEY=${{ secrets.TMDB_API_KEY }} ${{ secrets.DOCKER_USERNAME }}/movie-backend:latest
+            sudo docker run -d --restart unless-stopped --name movie-backend-live -p 80:5000 -e TMDB_API_KEY=${{ secrets.TMDB_API_KEY }} ${{ secrets.DOCKER_USERNAME }}/movie-backend:latest
+
+            for attempt in {1..12}; do
+              if curl --fail --silent http://localhost/health > /dev/null; then
+                exit 0
+              fi
+              sleep 5
+            done
+
+            echo "Backend health check failed"
+            sudo docker logs movie-backend-live
+            exit 1

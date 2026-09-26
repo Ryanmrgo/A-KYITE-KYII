@@ -19,6 +19,18 @@ const S = {
   redDim: "rgba(229,9,20,0.15)",
 };
 
+const fallbackPosters = [
+  "/posters/neon_horizon.png",
+  "/posters/shadow_protocol.png",
+  "/posters/last_kingdom.png",
+  "/posters/echoes_of_time.png",
+  "/posters/crimson_tide.png",
+  "/posters/silent_echo.png",
+  "/posters/zero_gravity.png",
+  "/posters/midnight_run.png",
+  "/posters/frozen_heart.png",
+];
+
 /* ── Movie Card ───────────────────────────────────────── */
 function MovieCard({ item, type, index }) {
   const navigate = useNavigate();
@@ -52,6 +64,17 @@ function MovieCard({ item, type, index }) {
       }}>
         {poster ? (
           <img src={poster} alt={title}
+            onError={(event) => {
+              if (event.currentTarget.src.includes("image.tmdb.org")) {
+                event.currentTarget.src = event.currentTarget.src.replace(
+                  "image.tmdb.org",
+                  "media.themoviedb.org"
+                );
+                return;
+              }
+              event.currentTarget.onerror = null;
+              event.currentTarget.src = fallbackPosters[index % fallbackPosters.length];
+            }}
             style={{ width: "100%", height: "100%", objectFit: "cover", display: "block",
               transform: hovered ? "scale(1.08)" : "scale(1)", transition: "transform 0.5s ease" }}
           />
@@ -168,6 +191,17 @@ function HeroSlider({ items }) {
           }}>
             {bg && (
               <img src={bg} alt="" aria-hidden
+                onError={(event) => {
+                  if (event.currentTarget.src.includes("image.tmdb.org")) {
+                    event.currentTarget.src = event.currentTarget.src.replace(
+                      "image.tmdb.org",
+                      "media.themoviedb.org"
+                    );
+                    return;
+                  }
+                  event.currentTarget.onerror = null;
+                  event.currentTarget.src = fallbackPosters[idx % fallbackPosters.length];
+                }}
                 style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover" }}
               />
             )}

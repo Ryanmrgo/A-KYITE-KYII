@@ -1,11 +1,11 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useParams, Link } from "react-router-dom";
 import { useTvDetails, posterUrl, formatRuntime, getTopCast } from "../hooks/useTmdb";
 import SeasonEpisodePicker from "../components/SeasonEpisodePicker";
 import { useAuth } from "../contexts/AuthContext";
 import { db } from "../firebase";
 import { doc, updateDoc, arrayUnion } from "firebase/firestore";
-import { useWatchProgress, getSavedProgress } from "../hooks/useWatchProgress";
+import { useWatchProgress } from "../hooks/useWatchProgress";
 
 const S = {
   bg: "#131313", surface: "#1a1a1a", border: "#2a2a2a",
@@ -46,6 +46,8 @@ export default function TvPlayer() {
   const [addingFav, setAddingFav] = useState(false);
   const [addedFav, setAddedFav] = useState(false);
   const [resumed, setResumed] = useState(false);
+  const watchProgressRef = useRef(currentUser?.profile?.watchProgress);
+  watchProgressRef.current = currentUser?.profile?.watchProgress;
 
   // Track & save watch progress to Firestore
   useWatchProgress(currentUser);
@@ -69,17 +71,18 @@ export default function TvPlayer() {
   // We compute this whenever the series, season, or episode changes
   // NOT every time the progress is saved to the database.
   const [playerSrc, setPlayerSrc] = useState(null);
+  const showReady = Boolean(show);
 
   useEffect(() => {
-    if (loading || !show) return;
+    if (loading || !showReady) return;
 
     const epKey = `s${activeSeason}e${selectedEpisode}`;
-    const epProgress = currentUser?.profile?.watchProgress?.[`t${seriesId}`]?.show_progress?.[epKey];
+    const epProgress = watchProgressRef.current?.[`t${seriesId}`]?.show_progress?.[epKey];
     const startAt = epProgress ? Math.floor(epProgress.progress?.watched || 0) : 0;
     
     const url = `https://vidfast.pro/tv/${seriesId}/${activeSeason}/${selectedEpisode}?autoPlay=false&nextButton=true&autoNext=true${startAt > 30 ? `&startFrom=${startAt}` : ""}`;
     setPlayerSrc(url);
-  }, [seriesId, activeSeason, selectedEpisode, loading, !!show]);
+  }, [seriesId, activeSeason, selectedEpisode, loading, showReady]);
 
   // For the UI indicator, we can still use the live progress
   const nowEpKey = `s${activeSeason}e${selectedEpisode}`;

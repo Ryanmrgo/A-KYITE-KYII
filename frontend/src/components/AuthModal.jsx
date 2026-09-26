@@ -157,7 +157,7 @@ export default function AuthModal({ isOpen, onClose }) {
         </form>
 
         <div style={{ marginTop: "1.5rem", textAlign: "center", fontSize: "0.9rem", color: S.muted }}>
-          {isLogin ? "New to Cinema?" : "Already have an account?"}{" "}
+          {isLogin ? "New to A KYITE KYI?" : "Already have an account?"}{" "}
           <button 
             onClick={() => setIsLogin(!isLogin)}
             style={{ background: "none", border: "none", color: "#fff", fontWeight: 600, cursor: "pointer", padding: 0 }}
