@@ -37,7 +37,7 @@ The platform utilizes a decoupled architecture where the frontend and backend ar
 ## CI/CD Pipeline
 Deployment is fully automated using GitHub Actions. Any push to the main branch triggers specialized workflows:
 - **Frontend Workflow**: Installs dependencies, builds the Vite application, syncs files to S3, and triggers a CloudFront cache invalidation.
-- **Backend Workflow**: Builds a new Docker image, pushes it to Docker Hub, and executes a remote SSH script on EC2 to pull and restart the updated container.
+- **Backend Workflow**: Uses a remote SSH script on EC2 to update the repo, rebuild the backend Docker image, and restart the running container.
 
 ## Local Development Setup
 
