@@ -1,123 +1,94 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect } from 'react';
 
-const apiUrl = import.meta.env.VITE_API_URL || "http://localhost:5000";
-const BASE_URL = `${apiUrl}/api/tmdb`;
-const IMAGE_BASE = "https://image.tmdb.org/t/p";
+const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+const BASE_URL = apiUrl + '/api/tmdb';
+const IMAGE_BASE = import.meta.env.VITE_IMAGE_BASE || apiUrl + '/api/image';
+const EMPTY_RESPONSE = { results: [] };
 
-function tmdbFetch(path) {
-  console.log(`[Frontend Fetching] URL: ${BASE_URL}${path}`);
-  // path usually starts with a slash like '/movie/popular'
-  return fetch(`${BASE_URL}${path}`, {
-    headers: {
-      "Content-Type": "application/json",
-    },
+function tmdbFetch(path, signal) {
+  return fetch(BASE_URL + path, {
+    headers: { 'Content-Type': 'application/json' },
+    signal,
   }).then((res) => {
-    if (!res.ok) throw new Error(`Backend Error ${res.status}: ${path}`);
+    if (!res.ok) throw new Error('Backend Error ' + res.status + ': ' + path);
     return res.json();
   });
 }
 
-/* ── Movie details ───────────────────────────────────── */
+function useTmdbResource(requestKey, initialData, enabled = true) {
+  const [state, setState] = useState({ key: null, data: initialData, error: null });
+
+  useEffect(() => {
+    if (!enabled) return undefined;
+
+    const controller = new AbortController();
+    tmdbFetch(requestKey, controller.signal)
+      .then((data) => setState({ key: requestKey, data, error: null }))
+      .catch((error) => {
+        if (error.name !== 'AbortError') {
+          setState({ key: requestKey, data: initialData, error: error.message });
+        }
+      });
+
+    return () => controller.abort();
+  }, [requestKey, enabled, initialData]);
+
+  const isCurrentRequest = state.key === requestKey;
+  return {
+    data: isCurrentRequest ? state.data : initialData,
+    loading: enabled && !isCurrentRequest,
+    error: isCurrentRequest ? state.error : null,
+  };
+}
+
 export function useMovieDetails(movieId) {
-  const [data, setData] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
-  useEffect(() => {
-    if (!movieId) return;
-    setLoading(true); setError(null);
-    tmdbFetch(`/movie/${movieId}?append_to_response=credits,videos`)
-      .then((j) => { setData(j); setLoading(false); })
-      .catch((e) => { setError(e.message); setLoading(false); });
-  }, [movieId]);
-  return { data, loading, error };
+  const requestKey = movieId ? '/movie/' + movieId + '?append_to_response=credits,videos' : '';
+  return useTmdbResource(requestKey, null, Boolean(movieId));
 }
 
-/* ── TV show details ─────────────────────────────────── */
 export function useTvDetails(seriesId) {
-  const [data, setData] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
-  useEffect(() => {
-    if (!seriesId) return;
-    setLoading(true); setError(null);
-    tmdbFetch(`/tv/${seriesId}?append_to_response=credits`)
-      .then((j) => { setData(j); setLoading(false); })
-      .catch((e) => { setError(e.message); setLoading(false); });
-  }, [seriesId]);
-  return { data, loading, error };
+  const requestKey = seriesId ? '/tv/' + seriesId + '?append_to_response=credits' : '';
+  return useTmdbResource(requestKey, null, Boolean(seriesId));
 }
 
-/* ── Season episodes ─────────────────────────────────── */
 export function useSeasonDetails(seriesId, seasonNumber) {
-  const [data, setData] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
-  useEffect(() => {
-    if (!seriesId || seasonNumber == null) return;
-    setLoading(true); setError(null);
-    tmdbFetch(`/tv/${seriesId}/season/${seasonNumber}`)
-      .then((j) => { setData(j); setLoading(false); })
-      .catch((e) => { setError(e.message); setLoading(false); });
-  }, [seriesId, seasonNumber]);
-  return { data, loading, error };
+  const enabled = Boolean(seriesId) && seasonNumber != null;
+  const requestKey = enabled ? '/tv/' + seriesId + '/season/' + seasonNumber : '';
+  return useTmdbResource(requestKey, null, enabled);
 }
 
-/* ── Trending (week) ─────────────────────────────────── */
-export function useTrending(mediaType = "movie", timeWindow = "week") {
-  const [data, setData] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
-  useEffect(() => {
-    setLoading(true); setError(null);
-    tmdbFetch(`/trending/${mediaType}/${timeWindow}`)
-      .then((j) => { setData(j.results ?? []); setLoading(false); })
-      .catch((e) => { setError(e.message); setLoading(false); });
-  }, [mediaType, timeWindow]);
-  return { data, loading, error };
+export function useTrending(mediaType = 'movie', timeWindow = 'week') {
+  const requestKey = '/trending/' + mediaType + '/' + timeWindow;
+  const resource = useTmdbResource(requestKey, EMPTY_RESPONSE);
+  return { ...resource, data: resource.data.results || [] };
 }
 
-/* ── Search ──────────────────────────────────────────── */
 export function useSearch(query) {
-  const [data, setData] = useState([]);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState(null);
-
-  useEffect(() => {
-    if (!query || query.trim() === "") {
-      setData([]);
-      setLoading(false);
-      return;
-    }
-    setLoading(true); setError(null);
-    // /search/multi catches both tv and movies
-    tmdbFetch(`/search/multi?query=${encodeURIComponent(query)}&include_adult=false`)
-      .then((j) => { 
-        // Filter out people, keep only movie/tv
-        const filtered = (j.results ?? []).filter(r => r.media_type === 'movie' || r.media_type === 'tv');
-        setData(filtered); 
-        setLoading(false); 
-      })
-      .catch((e) => { setError(e.message); setLoading(false); });
-  }, [query]);
-
-  return { data, loading, error };
+  const normalizedQuery = query?.trim() || '';
+  const enabled = normalizedQuery.length > 0;
+  const requestKey = enabled
+    ? '/search/multi?query=' + encodeURIComponent(normalizedQuery) + '&include_adult=false'
+    : '';
+  const resource = useTmdbResource(requestKey, EMPTY_RESPONSE, enabled);
+  const data = (resource.data.results || []).filter(
+    (result) => result.media_type === 'movie' || result.media_type === 'tv'
+  );
+  return { ...resource, data };
 }
 
-/* ── Image helpers ───────────────────────────────────── */
-export const posterUrl  = (p, s = "w500")  => p ? `${IMAGE_BASE}/${s}${p}` : null;
-export const backdropUrl = (p, s = "w1280") => p ? `${IMAGE_BASE}/${s}${p}` : null;
-export const stillUrl   = (p, s = "w300")  => p ? `${IMAGE_BASE}/${s}${p}` : null;
+export const posterUrl = (p, s = 'w500') => p ? IMAGE_BASE + '/' + s + p : null;
+export const backdropUrl = (p, s = 'w1280') => p ? IMAGE_BASE + '/' + s + p : null;
+export const stillUrl = (p, s = 'w300') => p ? IMAGE_BASE + '/' + s + p : null;
 
-/* ── Misc helpers ────────────────────────────────────── */
 export function formatRuntime(m) {
   if (!m) return null;
   const h = Math.floor(m / 60), min = m % 60;
-  return h > 0 ? `${h}h ${min}m` : `${min}m`;
+  return h > 0 ? h + 'h ' + min + 'm' : min + 'm';
 }
 export function getTopCast(credits, n = 5) {
-  return credits?.cast?.slice(0, n) ?? [];
+  return credits?.cast?.slice(0, n) || [];
 }
 export function formatDate(d) {
   if (!d) return null;
-  return new Date(d).toLocaleDateString("en-US", { year: "numeric", month: "short", day: "numeric" });
+  return new Date(d).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
 }

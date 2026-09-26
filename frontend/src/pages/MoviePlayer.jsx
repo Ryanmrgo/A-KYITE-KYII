@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useParams, Link } from "react-router-dom";
 import { useMovieDetails, posterUrl, formatRuntime, getTopCast } from "../hooks/useTmdb";
 import { useAuth } from "../contexts/AuthContext";
@@ -42,6 +42,8 @@ export default function MoviePlayer() {
   const { currentUser } = useAuth();
   const [addingFav, setAddingFav] = useState(false);
   const [addedFav, setAddedFav] = useState(false);
+  const profileRef = useRef(currentUser?.profile);
+  profileRef.current = currentUser?.profile;
 
   // Track & save watch progress to Firestore
   useWatchProgress(currentUser);
@@ -50,15 +52,16 @@ export default function MoviePlayer() {
   // We compute this ONCE when the component mounts or the movie ID changes
   // to avoid refreshing the iframe every time progress is saved.
   const [playerSrc, setPlayerSrc] = useState(null);
+  const movieReady = Boolean(movie);
 
   useEffect(() => {
-    if (loading || !movie) return;
+    if (loading || !movieReady) return;
     
-    const saved = getSavedProgress(currentUser?.profile, movieId, "movie");
+    const saved = getSavedProgress(profileRef.current, movieId, "movie");
     const startAt = saved ? Math.floor(saved.watched) : 0;
     const url = `https://vidfast.pro/movie/${movieId}?autoPlay=false${startAt > 30 ? `&startFrom=${startAt}` : ""}`;
     setPlayerSrc(url);
-  }, [movieId, loading, !!movie]);
+  }, [movieId, loading, movieReady]);
 
   // For the UI indicator, we can still use the live progress
   const nowProgress = getSavedProgress(currentUser?.profile, movieId, "movie");
