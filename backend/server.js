@@ -9,6 +9,10 @@ const TMDB_API_BASE = 'https://api.themoviedb.org/3/';
 const TMDB_IMAGE_BASE = 'https://image.tmdb.org/t/p/';
 const IMAGE_RELAY_BASE = 'https://wsrv.nl/?url=';
 const REQUEST_TIMEOUT_MS = 10000;
+const allowedOrigins = (process.env.CORS_ORIGIN || 'http://localhost:5173')
+    .split(',')
+    .map((origin) => origin.trim())
+    .filter(Boolean);
 
 app.get('/', (req, res) => {
     res.json({ name: 'movie-backend', status: 'ok' });
@@ -18,7 +22,12 @@ app.get('/health', (req, res) => {
     res.json({ status: 'ok', tmdbConfigured: Boolean(process.env.TMDB_API_KEY) });
 });
 
-app.use(cors({ origin: process.env.CORS_ORIGIN || true }));
+app.use(cors({
+    origin(origin, callback) {
+        if (!origin || allowedOrigins.includes(origin)) return callback(null, true);
+        return callback(new Error('Origin is not allowed by CORS'));
+    },
+}));
 app.use(express.json());
 
 // Proxy route for TMDB
