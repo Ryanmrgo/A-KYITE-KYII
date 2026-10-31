@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { useTrending, backdropUrl, posterUrl } from "../hooks/useTmdb";
 import { useAuth } from "../contexts/AuthContext";
 import { db } from "../firebase";
@@ -8,13 +8,13 @@ import { getContinueWatchingList } from "../hooks/useWatchProgress";
 import { Trash2 } from "lucide-react";
 
 const S = {
-  bg: "#131313",
-  surface: "#1a1a1a",
-  surfaceHigh: "#222",
-  border: "#2a2a2a",
-  text: "#e5e2e1",
-  muted: "#9ca3af",
-  faint: "#6b7280",
+  bg: "#000000",
+  surface: "#0e0e0e",
+  surfaceHigh: "#161616",
+  border: "rgba(255,255,255,0.07)",
+  text: "#ffffff",
+  muted: "rgba(255,255,255,0.65)",
+  faint: "rgba(255,255,255,0.4)",
   red: "#e50914",
   redDim: "rgba(229,9,20,0.15)",
 };
@@ -208,11 +208,11 @@ function HeroSlider({ items }) {
             {/* Gradients */}
             <div style={{
               position: "absolute", inset: 0,
-              background: "linear-gradient(to right, rgba(19,19,19,1) 0%, rgba(19,19,19,0.75) 40%, rgba(19,19,19,0) 100%)",
+              background: "linear-gradient(to right, rgba(0,0,0,0.95) 0%, rgba(0,0,0,0.7) 35%, rgba(0,0,0,0.1) 75%, rgba(0,0,0,0) 100%)",
             }} />
             <div style={{
               position: "absolute", inset: 0,
-              background: "linear-gradient(to top, rgba(19,19,19,1) 0%, transparent 50%)",
+              background: "linear-gradient(to top, #000000 0%, rgba(0,0,0,0.85) 20%, transparent 65%)",
             }} />
           </div>
         );
@@ -226,17 +226,24 @@ function HeroSlider({ items }) {
       }}>
         <div style={{
           display: "inline-flex", alignItems: "center", gap: "0.5rem",
-          marginBottom: "0.75rem",
+          marginBottom: "0.75rem", flexWrap: "wrap",
         }}>
           <span style={{
-            padding: "0.15rem 0.6rem", borderRadius: "4px",
+            padding: "0.15rem 0.6rem", borderRadius: "6px",
             backgroundColor: S.red, color: "#fff",
             fontSize: "0.65rem", fontWeight: 800, textTransform: "uppercase", letterSpacing: "0.08em",
           }}>
             {type === "movie" ? "Movie" : "TV Series"}
           </span>
-          <span style={{ color: S.muted, fontSize: "0.8rem" }}>
-            ★ {item.vote_average?.toFixed(1)} · Trending #{currentIndex + 1}
+          <span style={{
+            padding: "0.15rem 0.5rem", borderRadius: "6px",
+            backgroundColor: "rgba(255,255,255,0.12)", color: "#fff",
+            fontSize: "0.65rem", fontWeight: 800, border: "1px solid rgba(255,255,255,0.1)",
+          }}>
+            HD
+          </span>
+          <span style={{ color: S.muted, fontSize: "0.8rem", display: "flex", alignItems: "center", gap: "0.3rem" }}>
+            <span style={{ color: "#fbbf24" }}>★</span> {item.vote_average?.toFixed(1)} · Trending #{currentIndex + 1}
           </span>
         </div>
 
@@ -453,12 +460,12 @@ function SectionUI({ title, loading, items, renderItem }) {
         )}
         <div style={{
           position: "absolute", left: 0, top: 0, bottom: 0, width: "3rem", zIndex: 2,
-          background: "linear-gradient(to right, #131313, transparent)",
+          background: "linear-gradient(to right, #000000, transparent)",
           pointerEvents: "none", opacity: atStart ? 0 : 1, transition: "opacity 0.3s",
         }} />
         <div style={{
           position: "absolute", right: 0, top: 0, bottom: 0, width: "4rem", zIndex: 2,
-          background: "linear-gradient(to left, #131313, transparent)",
+          background: "linear-gradient(to left, #000000, transparent)",
           pointerEvents: "none", opacity: atEnd ? 0 : 1, transition: "opacity 0.3s",
         }} />
 
@@ -642,51 +649,64 @@ function ContinueWatchingSection({ items, currentUser }) {
 
 /* ── Page ─────────────────────────────────────────────── */
 export default function Home() {
+  const { pathname } = useLocation();
+  const isMovies = pathname === "/movies";
+  const isTv = pathname === "/tv";
+
   const { data: trendingAll, loading: loadingAll } = useTrending("all", "week");
   const { data: trendingMovies, loading: loadingMovies } = useTrending("movie", "week");
   const { data: trendingTv, loading: loadingTv } = useTrending("tv", "week");
   const { currentUser } = useAuth();
 
-  const top5 = (trendingAll ?? [])
-    .filter(i => i.media_type === "movie" || i.media_type === "tv")
-    .slice(0, 5);
+  const heroItems = isMovies
+    ? (trendingMovies ?? []).slice(0, 5)
+    : isTv
+    ? (trendingTv ?? []).slice(0, 5)
+    : (trendingAll ?? [])
+        .filter((i) => i.media_type === "movie" || i.media_type === "tv")
+        .slice(0, 5);
 
+  const heroLoading = isMovies ? loadingMovies : isTv ? loadingTv : loadingAll;
   const continueWatching = getContinueWatchingList(currentUser?.profile);
 
   return (
     <div style={{ minHeight: "100vh", backgroundColor: S.bg }}>
       {/* Hero Slider */}
-      {!loadingAll && top5.length > 0 && (
-        <HeroSlider items={top5} />
+      {!heroLoading && heroItems.length > 0 && (
+        <HeroSlider items={heroItems} />
       )}
 
-      {/* Continue Watching */}
-      {continueWatching.length > 0 && (
+      {/* Continue Watching (shown on Home overview) */}
+      {!isMovies && !isTv && continueWatching.length > 0 && (
         <ContinueWatchingSection items={continueWatching} currentUser={currentUser} />
       )}
 
       {/* Trending Movies */}
-      <TrendingSection
-        title="Trending Movies This Week"
-        items={trendingMovies}
-        type="movie"
-        loading={loadingMovies}
-      />
+      {!isTv && (
+        <TrendingSection
+          title={isMovies ? "Trending Movies This Week" : "Featured Movies"}
+          items={trendingMovies}
+          type="movie"
+          loading={loadingMovies}
+        />
+      )}
 
       {/* Trending TV */}
-      <TrendingSection
-        title="Trending TV Shows This Week"
-        items={trendingTv}
-        type="tv"
-        loading={loadingTv}
-      />
+      {!isMovies && (
+        <TrendingSection
+          title={isTv ? "Trending TV Shows This Week" : "Popular TV Shows"}
+          items={trendingTv}
+          type="tv"
+          loading={loadingTv}
+        />
+      )}
 
-      <div style={{ height: "3rem" }} />
+      <div style={{ height: "4rem" }} />
 
       <style>{`
         @keyframes pulse-bg {
-          0%,100% { background-color: #222; }
-          50%      { background-color: #2a2a2a; }
+          0%,100% { background-color: #121212; }
+          50%      { background-color: #1c1c1c; }
         }
       `}</style>
     </div>

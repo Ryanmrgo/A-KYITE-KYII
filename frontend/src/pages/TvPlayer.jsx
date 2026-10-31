@@ -10,8 +10,8 @@ import ServerSelector from "../components/ServerSelector";
 import { STREAMING_SERVERS, DEFAULT_SERVER_ID } from "../data/streamingServers";
 
 const S = {
-  bg: "#131313", surface: "#1a1a1a", border: "#2a2a2a",
-  text: "#e5e2e1", muted: "#9ca3af", faint: "#6b7280",
+  bg: "#000000", surface: "#0e0e0e", border: "rgba(255,255,255,0.08)",
+  text: "#ffffff", muted: "rgba(255,255,255,0.65)", faint: "rgba(255,255,255,0.4)",
   red: "#e50914",
 };
 
