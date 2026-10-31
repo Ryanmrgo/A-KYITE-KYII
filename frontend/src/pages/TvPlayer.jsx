@@ -6,6 +6,8 @@ import { useAuth } from "../contexts/AuthContext";
 import { db } from "../firebase";
 import { doc, updateDoc, arrayUnion } from "firebase/firestore";
 import { useWatchProgress } from "../hooks/useWatchProgress";
+import { useSubtitles } from "../hooks/useSubtitles";
+import { SubtitleWrapper } from "../components/SubtitleOverlay";
 
 const S = {
   bg: "#131313", surface: "#1a1a1a", border: "#2a2a2a",
@@ -51,6 +53,9 @@ export default function TvPlayer() {
 
   // Track & save watch progress to Firestore
   useWatchProgress(currentUser);
+
+  // Subtitle support — refetches whenever season/episode changes
+  const subtitles = useSubtitles("tv", seriesId, activeSeason, selectedEpisode);
 
   // On first load — restore last watched season/episode from saved progress
   useEffect(() => {
@@ -100,15 +105,18 @@ export default function TvPlayer() {
           ← Back to Home
         </Link>
 
-        {/* Player */}
-        <div style={{ position: "relative", paddingBottom: "56.25%", height: 0, borderRadius: "12px", overflow: "hidden" }}>
+        {/* Player with Subtitle Overlay */}
+        <SubtitleWrapper
+          {...subtitles}
+          containerStyle={{ position: "relative", paddingBottom: "56.25%", height: 0, borderRadius: "12px", overflow: "hidden" }}
+        >
           <iframe
             key={playerSrc}
             src={playerSrc}
             style={{ position: "absolute", top: 0, left: 0, width: "100%", height: "100%", border: "none" }}
             allowFullScreen allow="encrypted-media" title="TV Player"
           />
-        </div>
+        </SubtitleWrapper>
 
         {/* Now playing label + progress bar */}
         {!loading && show && (
