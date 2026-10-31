@@ -5,8 +5,6 @@ import { useAuth } from "../contexts/AuthContext";
 import { db } from "../firebase";
 import { doc, updateDoc, arrayUnion } from "firebase/firestore";
 import { useWatchProgress, getSavedProgress } from "../hooks/useWatchProgress";
-import { useSubtitles } from "../hooks/useSubtitles";
-import { SubtitleWrapper } from "../components/SubtitleOverlay";
 
 const MOVIE_ID = 533535;
 
@@ -50,9 +48,6 @@ export default function MoviePlayer() {
   // Track & save watch progress to Firestore
   useWatchProgress(currentUser);
 
-  // Subtitle support — auto-fetches from OpenSubtitles by TMDB ID
-  const subtitles = useSubtitles("movie", movieId);
-
   // Resume from saved position if available
   // We compute this ONCE when the component mounts or the movie ID changes
   // to avoid refreshing the iframe every time progress is saved.
@@ -82,17 +77,14 @@ export default function MoviePlayer() {
           ← Back to Home
         </Link>
 
-        {/* Player with Subtitle Overlay */}
-        <SubtitleWrapper
-          {...subtitles}
-          containerStyle={{ position: "relative", paddingBottom: "56.25%", height: 0, borderRadius: "12px", overflow: "hidden" }}
-        >
+        {/* Player */}
+        <div style={{ position: "relative", paddingBottom: "56.25%", height: 0, borderRadius: "12px", overflow: "hidden" }}>
           <iframe
             src={playerSrc}
             style={{ position: "absolute", top: 0, left: 0, width: "100%", height: "100%", border: "none" }}
             allowFullScreen allow="encrypted-media" title="Movie Player"
           />
-        </SubtitleWrapper>
+        </div>
 
         {/* Resume indicator */}
         {startFrom > 30 && (

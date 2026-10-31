@@ -1,141 +1,119 @@
-# 🎬 A-KYITE-KYII (Movie Streamer)
+# Movie Streamer - Full-Stack Production Streaming Platform
 
-[![React](https://img.shields.io/badge/React-18-61DAFB?style=for-the-badge&logo=react)](https://react.dev/)
-[![Vite](https://img.shields.io/badge/Vite-5.0-646CFF?style=for-the-badge&logo=vite)](https://vitejs.dev/)
-[![Node.js](https://img.shields.io/badge/Node.js-Express-339933?style=for-the-badge&logo=node.js)](https://nodejs.org/)
-[![Firebase](https://img.shields.io/badge/Firebase-Auth%20%26%20Firestore-FFCA28?style=for-the-badge&logo=firebase)](https://firebase.google.com/)
-[![Docker](https://img.shields.io/badge/Docker-Containerized-2496ED?style=for-the-badge&logo=docker)](https://www.docker.com/)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg?style=for-the-badge)](LICENSE)
+## Overview
+Movie Streamer is a modern, high-performance streaming application designed for seamless media consumption. The platform features an intuitive user interface, real-time watch progress synchronization, and a secure backend proxy to protect API integrity. It leverages a professional distributed cloud architecture for maximum reliability and scalability.
 
-**A-KYITE-KYII** is a high-performance, full-stack streaming media platform. It features synchronized cross-device watch history, personalized watchlists, automated subtitle fetching, and a decoupled security proxy that shields third-party API credentials from public exposure.
+## Core Features
+- **Real-Time Synchronized Progress**: Automatically saves and resumes movie and TV episodes across devices using Firestore live listeners.
+- **Personalized Experience**: Dedicated Favorites system and "Continue Watching" row for instant access to ongoing content.
+- **Top 10 Rankings**: Dynamic weekly rankings for both Movies and TV shows powered by the TMDB API.
+- **Secure Backend Proxy**: All external API calls are routed through a Node.js server to ensure sensitive API keys never reach the client-side.
+- **Responsive Media Player**: High-definition video player that persists playback state even during background data updates.
 
----
+## Technology Stack
 
-## 🌟 Key Features
+### Frontend
+- **React.js**: Functional components with hooks and context-based state management.
+- **React Router**: Client-side routing for seamless page transitions.
+- **Vite**: Modern Build tool and development server for rapid iteration.
+- **Firebase SDK**: Handles Authentication and real-time NoSQL database operations.
 
-- **Real-Time Cross-Device Watch Progress**: Automatically persists playback timestamps across sessions using Firebase Firestore real-time listeners.
-- **Dynamic Content Discovery**: Live Trending & Top 10 rankings for Movies and TV shows powered by TMDB integration.
-- **Automated Subtitle Support**: Subtitle search, caching, and dynamic overlay rendering powered by the SubDL API.
-- **Secure Backend Proxy Architecture**: External media API tokens never leak to the client; all queries are routed through an Express proxy with CORS validation.
-- **Multi-Cloud Ready**: Deployment-ready with Docker containers, Render Blueprint (`render.yaml`), Vercel client rules (`vercel.json`), or AWS (S3 + CloudFront + EC2).
+### Backend
+- **Node.js & Express**: High-performance backend routing and API proxying.
+- **Axios**: Secure communication with the TMDB external API.
+- **Docker**: Containerized environment ensuring consistency between local and production stages.
 
----
+### Cloud Infrastructure (AWS)
+- **Amazon S3**: Hosting for the optimized production build of the React frontend.
+- **Amazon CloudFront**: Content Delivery Network (CDN) providing global acceleration and SSL termination.
+- **Amazon EC2**: Virtual server hosting the containerized backend services.
+- **AWS IAM**: Strict permission policies for automated deployment security.
 
-## 🏗️ Architecture Overview
+## Infrastructure Architecture
+The platform utilizes a decoupled architecture where the frontend and backend are hosted on separate services but unified under a single CloudFront distribution:
+1. **Frontend Origin**: CloudFront routes base traffic to the S3 bucket.
+2. **Backend Origin**: CloudFront identifies the `/api/*` path pattern and routes requests directly to the EC2 instance via HTTP.
 
-```mermaid
-flowchart LR
-    Client["React Frontend (Vite)"]
-    Proxy["Node.js / Express Proxy"]
-    TMDB["TMDB API"]
-    SubDL["SubDL Subtitles"]
-    Firebase[("Firebase Auth & Firestore")]
+## CI/CD Pipeline
+Deployment is fully automated using GitHub Actions. Any push to the main branch triggers specialized workflows:
+- **Frontend Workflow**: Installs dependencies, builds the Vite application, syncs files to S3, and triggers a CloudFront cache invalidation.
+- **Backend Workflow**: Builds a new Docker image, pushes it to Docker Hub, and executes a remote SSH script on EC2 to pull and restart the updated container.
 
-    Client -->|"Watch History & User Auth"| Firebase
-    Client -->|"API Queries (/api/*)"| Proxy
-    Proxy -->|"Secure Metadata Query"| TMDB
-    Proxy -->|"Subtitle Stream"| SubDL
+## Local Development Setup
+
+## Shareable Deployment
+
+The repository includes deployment configuration for Render and Vercel:
+
+- `render.yaml` deploys the Express backend with `/health` monitoring.
+- `frontend/vercel.json` keeps React Router routes working on refresh.
+
+### 1. Deploy the backend to Render
+
+1. Push this repository to GitHub.
+2. In Render, choose **New > Blueprint** and select the repository.
+3. Set these environment variables in the backend service:
+
+```env
+TMDB_API_KEY=your_tmdb_key
+CORS_ORIGIN=https://your-frontend.vercel.app
 ```
 
----
+Copy the resulting backend URL, for example `https://movie-stream-backend.onrender.com`.
 
-## 📁 Project Structure
+### 2. Deploy the frontend to Vercel
 
-```plaintext
-movie_stream_site/
-├── backend/                  # Node.js + Express API Proxy
-│   ├── server.js             # Route proxies, rate limits, SubDL & TMDB integration
-│   ├── .env.example          # Environment variables template
-│   └── package.json
-├── frontend/                 # Vite + React Client Application
-│   ├── src/
-│   │   ├── components/       # UI Components (Navbar, Cards, SubtitleOverlay)
-│   │   ├── hooks/            # Custom hooks (useSubtitles, useWatchProgress)
-│   │   ├── pages/            # MoviePlayer, TvPlayer, Home, Browse, Watchlist
-│   │   └── firebase.js       # Firebase SDK initialization
-│   ├── .env.example          # Client environment template
-│   └── package.json
-├── Dockerfile                # Production container configuration
-├── render.yaml               # Infrastructure-as-code for Render deployment
-└── PROJECT_DOCUMENTATION.md  # Deep dive architecture and deployment specs
+1. In Vercel, import the same repository.
+2. Set the project root directory to `frontend`.
+3. Use `npm run build` as the build command and `dist` as the output directory.
+4. Add these environment variables before deploying:
+
+```env
+VITE_API_URL=https://movie-stream-backend.onrender.com
+VITE_FIREBASE_API_KEY=your_firebase_api_key
+VITE_FIREBASE_AUTH_DOMAIN=your_firebase_auth_domain
+VITE_FIREBASE_PROJECT_ID=your_firebase_project_id
+VITE_FIREBASE_STORAGE_BUCKET=your_firebase_storage_bucket
+VITE_FIREBASE_MESSAGING_SENDER_ID=your_firebase_sender_id
+VITE_FIREBASE_APP_ID=your_firebase_app_id
 ```
 
----
+After deployment, add the Vercel domain to Firebase Authentication's authorized domains. Then update Render's `CORS_ORIGIN` with the final Vercel URL and redeploy the backend.
 
-## 🚀 Local Development Setup
+Never put `TMDB_API_KEY` in the frontend environment. TMDB data and image requests are protected by the backend proxy.
+
+TMDB's free API access is intended for non-commercial use. Obtain commercial permission from TMDB before monetizing or operating this service commercially. TMDB metadata permission also does not grant rights to stream movie or TV content; verify the licensing terms of the external video provider before sharing publicly.
 
 ### Prerequisites
-- **Node.js** (v18 or higher)
-- **Firebase Account** (Firestore + Auth enabled)
-- **TMDB API Key** (Free from [themoviedb.org](https://www.themoviedb.org/))
-- **SubDL API Key** (Optional, for live subtitles)
+- Node.js (v18 or higher)
+- Docker (optional, for backend testing)
+- Firebase Account
+- TMDB API Key
 
-### 1. Clone the repository
-```bash
-git clone https://github.com/Ryanmrgo/A-KYITE-KYII.git
-cd A-KYITE-KYII
-```
+### Environment Configuration
 
-### 2. Configure Environment Variables
-
-**Backend (`backend/.env`):**
-```bash
-cp backend/.env.example backend/.env
-```
-Fill in:
+#### Frontend (.env)
 ```env
+VITE_API_URL=http://127.0.0.1:5000
+VITE_FIREBASE_API_KEY=YOUR_KEY
+VITE_FIREBASE_AUTH_DOMAIN=YOUR_DOMAIN
+VITE_FIREBASE_PROJECT_ID=YOUR_ID
+VITE_FIREBASE_STORAGE_BUCKET=YOUR_BUCKET
+VITE_FIREBASE_MESSAGING_SENDER_ID=YOUR_SENDER_ID
+VITE_FIREBASE_APP_ID=YOUR_APP_ID
+```
+
+#### Backend (.env)
+```env
+TMDB_API_KEY=YOUR_TMDB_API_KEY
 PORT=5000
-TMDB_API_KEY=your_tmdb_api_key
-SUBDL_API_KEY=your_subdl_key
-CORS_ORIGIN=http://localhost:5173
 ```
 
-**Frontend (`frontend/.env`):**
-```bash
-cp frontend/.env.example frontend/.env
-```
-Fill in your Firebase credentials:
-```env
-VITE_API_URL=http://localhost:5000
-VITE_FIREBASE_API_KEY=your_firebase_api_key
-VITE_FIREBASE_AUTH_DOMAIN=your_project.firebaseapp.com
-VITE_FIREBASE_PROJECT_ID=your_project_id
-VITE_FIREBASE_STORAGE_BUCKET=your_project.firebasestorage.app
-VITE_FIREBASE_MESSAGING_SENDER_ID=your_sender_id
-VITE_FIREBASE_APP_ID=your_app_id
-```
+### Installation
+1. Clone the repository: `git clone https://github.com/PasiAbey/movie_stream_site.git`
+2. Install dependencies for the root and subdirectories: `npm install && npm run install-all`
+3. Start the backend: `npm run backend`
+4. Start the frontend: `npm run frontend`
 
-### 3. Install & Run
-```bash
-# Install all dependencies
-npm install
-npm run install-all
-
-# Start both backend and frontend concurrently
-npm run dev
-```
-
-Visit `http://localhost:5173` to explore the application.
-
----
-
-## 🧪 Technical Interview Talking Points
-
-- **API Key Security**: Explaining why client-side single-page applications (SPAs) should never hold secret third-party tokens, and how the Express proxy acts as a secure buffer.
-- **State Hydration & Resiliency**: Handling playback interruptions and syncing progress to Firestore without overloading write operations.
-- **Containerization**: Writing multi-stage Docker builds to ensure consistent runtime behavior across local machines, Render, and AWS EC2.
-
----
-
-## 👨‍💻 Author
-
-**Sanda Pyae Sone (Ryan)**  
-- GitHub: [@Ryanmrgo](https://github.com/Ryanmrgo)  
-- Focus: Full-Stack Web Development, Agentic AI, and Applied Machine Learning  
-- Institution: Myanmar Institute of Information Technology (MIIT)
-
----
-
-## 📄 License
-
-Distributed under the [MIT License](LICENSE).
+## License
+Distributed under the MIT License. See `LICENSE` for more information.
