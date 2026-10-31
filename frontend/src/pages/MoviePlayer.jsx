@@ -5,6 +5,8 @@ import { useAuth } from "../contexts/AuthContext";
 import { db } from "../firebase";
 import { doc, updateDoc, arrayUnion } from "firebase/firestore";
 import { useWatchProgress, getSavedProgress } from "../hooks/useWatchProgress";
+import ServerSelector from "../components/ServerSelector";
+import { STREAMING_SERVERS, DEFAULT_SERVER_ID } from "../data/streamingServers";
 
 const MOVIE_ID = 533535;
 
@@ -51,6 +53,7 @@ export default function MoviePlayer() {
   // Resume from saved position if available
   // We compute this ONCE when the component mounts or the movie ID changes
   // to avoid refreshing the iframe every time progress is saved.
+  const [serverId, setServerId] = useState(DEFAULT_SERVER_ID);
   const [playerSrc, setPlayerSrc] = useState(null);
   const movieReady = Boolean(movie);
 
@@ -59,9 +62,10 @@ export default function MoviePlayer() {
     
     const saved = getSavedProgress(profileRef.current, movieId, "movie");
     const startAt = saved ? Math.floor(saved.watched) : 0;
-    const url = `https://vidfast.pro/movie/${movieId}?autoPlay=false${startAt > 30 ? `&startFrom=${startAt}` : ""}`;
+    const currentServer = STREAMING_SERVERS.find((s) => s.id === serverId) || STREAMING_SERVERS[0];
+    const url = currentServer.getMovieUrl(movieId, startAt);
     setPlayerSrc(url);
-  }, [movieId, loading, movieReady]);
+  }, [movieId, loading, movieReady, serverId]);
 
   // For the UI indicator, we can still use the live progress
   const nowProgress = getSavedProgress(currentUser?.profile, movieId, "movie");
@@ -80,11 +84,18 @@ export default function MoviePlayer() {
         {/* Player */}
         <div style={{ position: "relative", paddingBottom: "56.25%", height: 0, borderRadius: "12px", overflow: "hidden" }}>
           <iframe
+            key={playerSrc}
             src={playerSrc}
             style={{ position: "absolute", top: 0, left: 0, width: "100%", height: "100%", border: "none" }}
             allowFullScreen allow="encrypted-media" title="Movie Player"
           />
         </div>
+
+        {/* Server Selector */}
+        <ServerSelector
+          currentServerId={serverId}
+          onSelectServer={setServerId}
+        />
 
         {/* Resume indicator */}
         {startFrom > 30 && (

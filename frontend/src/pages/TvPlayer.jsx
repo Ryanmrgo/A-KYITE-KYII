@@ -6,6 +6,8 @@ import { useAuth } from "../contexts/AuthContext";
 import { db } from "../firebase";
 import { doc, updateDoc, arrayUnion } from "firebase/firestore";
 import { useWatchProgress } from "../hooks/useWatchProgress";
+import ServerSelector from "../components/ServerSelector";
+import { STREAMING_SERVERS, DEFAULT_SERVER_ID } from "../data/streamingServers";
 
 const S = {
   bg: "#131313", surface: "#1a1a1a", border: "#2a2a2a",
@@ -70,6 +72,7 @@ export default function TvPlayer() {
   // Build resume startFrom for the current episode
   // We compute this whenever the series, season, or episode changes
   // NOT every time the progress is saved to the database.
+  const [serverId, setServerId] = useState(DEFAULT_SERVER_ID);
   const [playerSrc, setPlayerSrc] = useState(null);
   const showReady = Boolean(show);
 
@@ -80,9 +83,10 @@ export default function TvPlayer() {
     const epProgress = watchProgressRef.current?.[`t${seriesId}`]?.show_progress?.[epKey];
     const startAt = epProgress ? Math.floor(epProgress.progress?.watched || 0) : 0;
     
-    const url = `https://vidfast.pro/tv/${seriesId}/${activeSeason}/${selectedEpisode}?autoPlay=false&nextButton=true&autoNext=true${startAt > 30 ? `&startFrom=${startAt}` : ""}`;
+    const currentServer = STREAMING_SERVERS.find((s) => s.id === serverId) || STREAMING_SERVERS[0];
+    const url = currentServer.getTvUrl(seriesId, activeSeason, selectedEpisode, startAt);
     setPlayerSrc(url);
-  }, [seriesId, activeSeason, selectedEpisode, loading, showReady]);
+  }, [seriesId, activeSeason, selectedEpisode, loading, showReady, serverId]);
 
   // For the UI indicator, we can still use the live progress
   const nowEpKey = `s${activeSeason}e${selectedEpisode}`;
@@ -109,6 +113,12 @@ export default function TvPlayer() {
             allowFullScreen allow="encrypted-media" title="TV Player"
           />
         </div>
+
+        {/* Server Selector */}
+        <ServerSelector
+          currentServerId={serverId}
+          onSelectServer={setServerId}
+        />
 
         {/* Now playing label + progress bar */}
         {!loading && show && (
