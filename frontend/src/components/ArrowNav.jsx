@@ -1,268 +1,483 @@
-import React, { useState } from "react";
-import { Link, useLocation } from "react-router-dom";
+import React, { useState, useEffect, useRef } from "react";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext";
 
 export default function ArrowNav({ onOpenSearch, onOpenAuth }) {
   const { pathname } = useLocation();
-  const { currentUser } = useAuth();
-  const [hoveredItem, setHoveredItem] = useState(null);
+  const navigate = useNavigate();
+  const { currentUser, logout } = useAuth();
+  
+  const [scrolled, setScrolled] = useState(false);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [profileMenuOpen, setProfileMenuOpen] = useState(false);
+  const profileMenuRef = useRef(null);
 
-  const navItems = [
-    {
-      id: "home",
-      label: "Home",
-      to: "/",
-      icon: (
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" width="22" height="22">
-          <path d="M3 10.5L12 3l9 7.5V20a1 1 0 01-1 1H4a1 1 0 01-1-1V10.5z" />
-          <path d="M9 21V12h6v9" />
-        </svg>
-      ),
-    },
-    {
-      id: "search",
-      label: "Search",
-      action: onOpenSearch,
-      icon: (
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" width="22" height="22">
-          <circle cx="11" cy="11" r="7" />
-          <path d="M21 21l-4.35-4.35" />
-        </svg>
-      ),
-    },
-    {
-      id: "movies",
-      label: "Movies",
-      to: "/movies",
-      icon: (
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" width="22" height="22">
-          <rect x="2" y="4" width="20" height="16" rx="2" />
-          <path d="M7 4v16M17 4v16M2 12h20M2 8h5M17 8h5M2 16h5M17 16h5" />
-        </svg>
-      ),
-    },
-    {
-      id: "tv",
-      label: "TV Shows",
-      to: "/tv",
-      icon: (
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" width="22" height="22">
-          <rect x="2" y="7" width="20" height="13" rx="2" />
-          <path d="M16 3L12 7 8 3" />
-        </svg>
-      ),
-    },
-    {
-      id: "favorites",
-      label: "Watchlist",
-      to: "/favorites",
-      icon: (
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" width="22" height="22">
-          <path d="M19 21l-7-5-7 5V5a2 2 0 012-2h10a2 2 0 012 2z" />
-        </svg>
-      ),
-    },
-    {
-      id: "profile",
-      label: currentUser ? (currentUser.displayName || currentUser.email?.split("@")[0] || "Account") : "Sign In",
-      action: onOpenAuth,
-      icon: (
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" width="22" height="22">
-          <circle cx="12" cy="8" r="4" />
-          <path d="M5.5 20a6.5 6.5 0 0113 0" />
-        </svg>
-      ),
-    },
+  // Close menus on route change
+  useEffect(() => {
+    setMobileMenuOpen(false);
+    setProfileMenuOpen(false);
+  }, [pathname]);
+
+  // Track scroll position for header styling
+  useEffect(() => {
+    const handleScroll = () => {
+      setScrolled(window.scrollY > 20);
+    };
+    window.addEventListener("scroll", handleScroll);
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
+
+  // Close profile menu when clicking outside
+  useEffect(() => {
+    function handleClickOutside(event) {
+      if (profileMenuRef.current && !profileMenuRef.current.contains(event.target)) {
+        setProfileMenuOpen(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  const navLinks = [
+    { label: "Home", to: "/" },
+    { label: "Movies", to: "/movies" },
+    { label: "TV Shows", to: "/tv" },
+    { label: "Watchlist", to: "/favorites" },
   ];
 
   return (
-    <>
-      {/* ── Desktop Floating Left Dock (ArrowTV Style) ── */}
-      <nav
-        className="hidden md:flex flex-col items-center justify-between"
+    <header
+      style={{
+        position: "sticky",
+        top: 0,
+        left: 0,
+        right: 0,
+        zIndex: 400,
+        backgroundColor: scrolled ? "rgba(8, 8, 8, 0.94)" : "rgba(8, 8, 8, 0.8)",
+        backdropFilter: "blur(18px)",
+        WebkitBackdropFilter: "blur(18px)",
+        borderBottom: `1px solid ${scrolled ? "rgba(255, 255, 255, 0.08)" : "rgba(255, 255, 255, 0.04)"}`,
+        transition: "all 0.3s ease",
+      }}
+    >
+      <div
         style={{
-          position: "fixed",
-          top: 0,
-          left: 0,
-          bottom: 0,
-          width: "68px",
-          zIndex: 500,
-          padding: "1.25rem 0",
-          background: "linear-gradient(to right, rgba(0,0,0,0.95) 0%, rgba(0,0,0,0.7) 45%, rgba(0,0,0,0.2) 80%, transparent 100%)",
-          backdropFilter: "blur(12px)",
-          WebkitBackdropFilter: "blur(12px)",
+          maxWidth: "1440px",
+          margin: "0 auto",
+          padding: "0 1.25rem",
+          height: "64px",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "space-between",
+          gap: "1rem",
         }}
       >
-        {/* Brand Arrow Logo */}
-        <Link
-          to="/"
-          style={{
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            width: "44px",
-            height: "44px",
-            borderRadius: "14px",
-            background: "linear-gradient(135deg, rgba(229,9,20,0.85) 0%, rgba(229,9,20,0.3) 100%)",
-            color: "#ffffff",
-            boxShadow: "0 4px 20px rgba(229,9,20,0.4)",
-            textDecoration: "none",
-            transition: "transform 0.2s ease",
-          }}
-          onMouseEnter={(e) => (e.currentTarget.style.transform = "scale(1.08)")}
-          onMouseLeave={(e) => (e.currentTarget.style.transform = "scale(1)")}
-        >
-          {/* ArrowTV Arrow Icon */}
-          <svg viewBox="0 0 24 24" width="22" height="22" fill="currentColor">
-            <path d="M12 2L4 10h5v10h6V10h5L12 2z" transform="rotate(90 12 12)" />
-          </svg>
-        </Link>
-
-        {/* Center Icons Stack */}
-        <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "6px" }}>
-          {navItems.map((item) => {
-            const isActive = item.to ? pathname === item.to : false;
-            const isHovered = hoveredItem === item.id;
-
-            const buttonStyle = {
-              position: "relative",
+        {/* ── Left: Brand & Desktop Nav ── */}
+        <div style={{ display: "flex", alignItems: "center", gap: "2rem" }}>
+          {/* Brand Logo */}
+          <Link
+            to="/"
+            style={{
               display: "flex",
               alignItems: "center",
-              justifyContent: "center",
-              width: "44px",
-              height: "44px",
-              borderRadius: "14px",
-              background: isActive
-                ? "rgba(255,255,255,0.14)"
-                : isHovered
-                ? "rgba(255,255,255,0.07)"
-                : "transparent",
-              color: isActive ? "#ffffff" : isHovered ? "#ffffff" : "rgba(255,255,255,0.45)",
-              border: "none",
-              cursor: "pointer",
-              transition: "all 0.2s ease",
-              boxShadow: isActive ? "0 0 0 1px rgba(255,255,255,0.12) inset, 0 4px 12px rgba(0,0,0,0.5)" : "none",
+              gap: "0.6rem",
               textDecoration: "none",
-            };
+              color: "#ffffff",
+            }}
+          >
+            <div
+              style={{
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                width: "36px",
+                height: "36px",
+                borderRadius: "10px",
+                background: "linear-gradient(135deg, #e50914 0%, #b80610 100%)",
+                boxShadow: "0 2px 14px rgba(229, 9, 20, 0.5)",
+              }}
+            >
+              {/* Arrow Icon */}
+              <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor">
+                <path d="M12 2L4 10h5v10h6V10h5L12 2z" transform="rotate(90 12 12)" />
+              </svg>
+            </div>
+            <span
+              style={{
+                fontFamily: "'Epilogue', sans-serif",
+                fontSize: "1.25rem",
+                fontWeight: 900,
+                letterSpacing: "-0.03em",
+                textTransform: "uppercase",
+                background: "linear-gradient(to right, #ffffff 60%, rgba(255, 255, 255, 0.7) 100%)",
+                WebkitBackgroundClip: "text",
+                WebkitTextFillColor: "transparent",
+              }}
+            >
+              Arrow<span style={{ color: "#e50914", WebkitTextFillColor: "#e50914" }}>TV</span>
+            </span>
+          </Link>
 
-            const content = (
-              <>
-                {item.icon}
-
-                {/* ArrowTV Style Floating Tooltip */}
-                {isHovered && (
-                  <span
-                    style={{
-                      position: "absolute",
-                      left: "calc(100% + 14px)",
-                      top: "50%",
-                      transform: "translateY(-50%)",
-                      background: "rgba(16,16,16,0.96)",
-                      color: "#ffffff",
-                      fontSize: "12px",
-                      fontWeight: 600,
-                      padding: "6px 12px",
-                      borderRadius: "8px",
-                      whiteSpace: "nowrap",
-                      pointerEvents: "none",
-                      border: "1px solid rgba(255,255,255,0.1)",
-                      boxShadow: "0 6px 20px rgba(0,0,0,0.6)",
-                      backdropFilter: "blur(10px)",
-                      WebkitBackdropFilter: "blur(10px)",
-                      zIndex: 999,
-                      animation: "fade-in-up 0.15s ease-out both",
-                    }}
-                  >
-                    {item.label}
-                  </span>
-                )}
-              </>
-            );
-
-            if (item.to) {
+          {/* Desktop Navigation Links */}
+          <nav className="hidden md:flex items-center" style={{ gap: "0.35rem" }}>
+            {navLinks.map((item) => {
+              const isActive = item.to === "/" ? pathname === "/" : pathname.startsWith(item.to);
               return (
                 <Link
-                  key={item.id}
+                  key={item.to}
                   to={item.to}
-                  style={buttonStyle}
-                  onMouseEnter={() => setHoveredItem(item.id)}
-                  onMouseLeave={() => setHoveredItem(null)}
-                  aria-label={item.label}
+                  style={{
+                    position: "relative",
+                    padding: "0.45rem 0.85rem",
+                    borderRadius: "8px",
+                    fontSize: "0.88rem",
+                    fontWeight: isActive ? 700 : 500,
+                    color: isActive ? "#ffffff" : "rgba(255, 255, 255, 0.65)",
+                    textDecoration: "none",
+                    backgroundColor: isActive ? "rgba(255, 255, 255, 0.08)" : "transparent",
+                    transition: "all 0.2s ease",
+                  }}
+                  onMouseEnter={(e) => {
+                    if (!isActive) {
+                      e.currentTarget.style.color = "#ffffff";
+                      e.currentTarget.style.backgroundColor = "rgba(255, 255, 255, 0.05)";
+                    }
+                  }}
+                  onMouseLeave={(e) => {
+                    if (!isActive) {
+                      e.currentTarget.style.color = "rgba(255, 255, 255, 0.65)";
+                      e.currentTarget.style.backgroundColor = "transparent";
+                    }
+                  }}
                 >
-                  {content}
+                  {item.label}
+                  {isActive && (
+                    <span
+                      style={{
+                        position: "absolute",
+                        bottom: "-2px",
+                        left: "50%",
+                        transform: "translateX(-50%)",
+                        width: "16px",
+                        height: "2px",
+                        borderRadius: "2px",
+                        backgroundColor: "#e50914",
+                        boxShadow: "0 0 8px rgba(229, 9, 20, 0.8)",
+                      }}
+                    />
+                  )}
                 </Link>
               );
-            }
-
-            return (
-              <button
-                key={item.id}
-                onClick={item.action}
-                style={buttonStyle}
-                onMouseEnter={() => setHoveredItem(item.id)}
-                onMouseLeave={() => setHoveredItem(null)}
-                aria-label={item.label}
-              >
-                {content}
-              </button>
-            );
-          })}
+            })}
+          </nav>
         </div>
 
-        {/* Bottom spacer for balance */}
-        <div style={{ width: "44px", height: "44px" }} />
-      </nav>
+        {/* ── Right: Search Modal Trigger, Auth & Mobile Menu ── */}
+        <div style={{ display: "flex", alignItems: "center", gap: "0.75rem" }}>
+          {/* Quick Search Button (opens ArrowSearchModal) */}
+          <button
+            onClick={onOpenSearch}
+            aria-label="Search movies and tv shows"
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: "0.6rem",
+              padding: "0.45rem 0.85rem",
+              borderRadius: "9999px",
+              backgroundColor: "rgba(255, 255, 255, 0.06)",
+              border: "1px solid rgba(255, 255, 255, 0.09)",
+              color: "rgba(255, 255, 255, 0.6)",
+              cursor: "pointer",
+              transition: "all 0.2s ease",
+              outline: "none",
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.backgroundColor = "rgba(255, 255, 255, 0.1)";
+              e.currentTarget.style.borderColor = "rgba(255, 255, 255, 0.2)";
+              e.currentTarget.style.color = "#ffffff";
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.backgroundColor = "rgba(255, 255, 255, 0.06)";
+              e.currentTarget.style.borderColor = "rgba(255, 255, 255, 0.09)";
+              e.currentTarget.style.color = "rgba(255, 255, 255, 0.6)";
+            }}
+          >
+            <svg
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              width="16"
+              height="16"
+            >
+              <circle cx="11" cy="11" r="7" />
+              <path d="M21 21l-4.35-4.35" />
+            </svg>
+            <span className="hidden sm:inline" style={{ fontSize: "0.82rem" }}>
+              Search...
+            </span>
+            <span
+              className="hidden sm:inline-flex items-center justify-center"
+              style={{
+                fontSize: "0.68rem",
+                fontWeight: 700,
+                padding: "0.1rem 0.4rem",
+                borderRadius: "5px",
+                backgroundColor: "rgba(255, 255, 255, 0.08)",
+                border: "1px solid rgba(255, 255, 255, 0.12)",
+                color: "rgba(255, 255, 255, 0.5)",
+              }}
+            >
+              Ctrl+K
+            </span>
+          </button>
 
-      {/* ── Mobile Floating Bottom Dock ── */}
-      <nav
-        className="md:hidden flex items-center justify-around"
-        style={{
-          position: "fixed",
-          bottom: 0,
-          left: 0,
-          right: 0,
-          height: "60px",
-          zIndex: 500,
-          background: "rgba(8,8,8,0.92)",
-          borderTop: "1px solid rgba(255,255,255,0.08)",
-          backdropFilter: "blur(16px)",
-          WebkitBackdropFilter: "blur(16px)",
-          padding: "0 0.5rem",
-        }}
-      >
-        {navItems.map((item) => {
-          const isActive = item.to ? pathname === item.to : false;
-          const buttonStyle = {
+          {/* User Auth / Profile Dropdown */}
+          {currentUser ? (
+            <div style={{ position: "relative" }} ref={profileMenuRef}>
+              <button
+                onClick={() => setProfileMenuOpen(!profileMenuOpen)}
+                aria-label="User profile menu"
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "0.5rem",
+                  padding: "0.25rem",
+                  background: "transparent",
+                  border: "none",
+                  cursor: "pointer",
+                }}
+              >
+                <div
+                  style={{
+                    width: "34px",
+                    height: "34px",
+                    borderRadius: "50%",
+                    background: "linear-gradient(135deg, #e50914 0%, #8b0000 100%)",
+                    color: "#ffffff",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    fontSize: "0.85rem",
+                    fontWeight: 800,
+                    boxShadow: "0 2px 8px rgba(229, 9, 20, 0.4)",
+                    border: "1px solid rgba(255, 255, 255, 0.15)",
+                  }}
+                >
+                  {(currentUser.displayName || currentUser.email || "U").charAt(0).toUpperCase()}
+                </div>
+              </button>
+
+              {/* Profile Dropdown Menu */}
+              {profileMenuOpen && (
+                <div
+                  style={{
+                    position: "absolute",
+                    top: "calc(100% + 10px)",
+                    right: 0,
+                    width: "210px",
+                    padding: "0.5rem",
+                    borderRadius: "14px",
+                    backgroundColor: "rgba(16, 16, 16, 0.98)",
+                    border: "1px solid rgba(255, 255, 255, 0.1)",
+                    boxShadow: "0 16px 40px rgba(0, 0, 0, 0.8)",
+                    backdropFilter: "blur(20px)",
+                    WebkitBackdropFilter: "blur(20px)",
+                    zIndex: 500,
+                    display: "flex",
+                    flexDirection: "column",
+                    gap: "0.25rem",
+                  }}
+                >
+                  <div
+                    style={{
+                      padding: "0.6rem 0.75rem",
+                      borderBottom: "1px solid rgba(255, 255, 255, 0.08)",
+                      marginBottom: "0.25rem",
+                    }}
+                  >
+                    <p
+                      style={{
+                        margin: 0,
+                        fontSize: "0.85rem",
+                        fontWeight: 700,
+                        color: "#ffffff",
+                        whiteSpace: "nowrap",
+                        overflow: "hidden",
+                        textOverflow: "ellipsis",
+                      }}
+                    >
+                      {currentUser.displayName || "User"}
+                    </p>
+                    <p
+                      style={{
+                        margin: "0.15rem 0 0 0",
+                        fontSize: "0.74rem",
+                        color: "rgba(255, 255, 255, 0.5)",
+                        whiteSpace: "nowrap",
+                        overflow: "hidden",
+                        textOverflow: "ellipsis",
+                      }}
+                    >
+                      {currentUser.email}
+                    </p>
+                  </div>
+
+                  <Link
+                    to="/favorites"
+                    onClick={() => setProfileMenuOpen(false)}
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      gap: "0.6rem",
+                      padding: "0.5rem 0.75rem",
+                      borderRadius: "8px",
+                      color: "#ffffff",
+                      fontSize: "0.84rem",
+                      textDecoration: "none",
+                      transition: "background 0.2s",
+                    }}
+                    onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = "rgba(255, 255, 255, 0.08)")}
+                    onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = "transparent")}
+                  >
+                    <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2">
+                      <path d="M19 21l-7-5-7 5V5a2 2 0 012-2h10a2 2 0 012 2z" />
+                    </svg>
+                    My Watchlist
+                  </Link>
+
+                  <button
+                    onClick={() => {
+                      setProfileMenuOpen(false);
+                      logout();
+                    }}
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      gap: "0.6rem",
+                      padding: "0.5rem 0.75rem",
+                      borderRadius: "8px",
+                      color: "#ff6b6b",
+                      fontSize: "0.84rem",
+                      fontWeight: 600,
+                      background: "none",
+                      border: "none",
+                      cursor: "pointer",
+                      textAlign: "left",
+                      width: "100%",
+                      transition: "background 0.2s",
+                    }}
+                    onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = "rgba(255, 75, 75, 0.1)")}
+                    onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = "transparent")}
+                  >
+                    <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2">
+                      <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
+                      <polyline points="16 17 21 12 16 7" />
+                      <line x1="21" y1="12" x2="9" y2="12" />
+                    </svg>
+                    Log Out
+                  </button>
+                </div>
+              )}
+            </div>
+          ) : (
+            <button
+              onClick={onOpenAuth}
+              style={{
+                padding: "0.45rem 1.15rem",
+                borderRadius: "9999px",
+                background: "linear-gradient(135deg, #e50914 0%, #b80610 100%)",
+                color: "#ffffff",
+                border: "none",
+                fontSize: "0.84rem",
+                fontWeight: 700,
+                cursor: "pointer",
+                boxShadow: "0 2px 10px rgba(229, 9, 20, 0.35)",
+                transition: "transform 0.2s, box-shadow 0.2s",
+                whiteSpace: "nowrap",
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.transform = "scale(1.03)";
+                e.currentTarget.style.boxShadow = "0 4px 16px rgba(229, 9, 20, 0.55)";
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.transform = "scale(1)";
+                e.currentTarget.style.boxShadow = "0 2px 10px rgba(229, 9, 20, 0.35)";
+              }}
+            >
+              Sign In
+            </button>
+          )}
+
+          {/* Mobile Menu Toggle Button */}
+          <button
+            className="md:hidden flex items-center justify-center"
+            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+            aria-label="Toggle navigation menu"
+            style={{
+              width: "36px",
+              height: "36px",
+              borderRadius: "8px",
+              background: "rgba(255, 255, 255, 0.08)",
+              border: "1px solid rgba(255, 255, 255, 0.1)",
+              color: "#ffffff",
+              cursor: "pointer",
+            }}
+          >
+            {mobileMenuOpen ? (
+              <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2">
+                <line x1="18" y1="6" x2="6" y2="18" />
+                <line x1="6" y1="6" x2="18" y2="18" />
+              </svg>
+            ) : (
+              <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2">
+                <line x1="3" y1="12" x2="21" y2="12" />
+                <line x1="3" y1="6" x2="21" y2="6" />
+                <line x1="3" y1="18" x2="21" y2="18" />
+              </svg>
+            )}
+          </button>
+        </div>
+      </div>
+
+      {/* ── Mobile Dropdown Menu (No floating overlay) ── */}
+      {mobileMenuOpen && (
+        <nav
+          className="md:hidden"
+          style={{
+            padding: "0.75rem 1.25rem 1.25rem",
+            backgroundColor: "rgba(10, 10, 10, 0.98)",
+            borderTop: "1px solid rgba(255, 255, 255, 0.06)",
             display: "flex",
             flexDirection: "column",
-            alignItems: "center",
-            justifyContent: "center",
-            width: "44px",
-            height: "44px",
-            borderRadius: "12px",
-            background: isActive ? "rgba(255,255,255,0.12)" : "transparent",
-            color: isActive ? "#ffffff" : "rgba(255,255,255,0.45)",
-            border: "none",
-            cursor: "pointer",
-            textDecoration: "none",
-            transition: "all 0.2s ease",
-          };
-
-          if (item.to) {
+            gap: "0.4rem",
+          }}
+        >
+          {navLinks.map((item) => {
+            const isActive = item.to === "/" ? pathname === "/" : pathname.startsWith(item.to);
             return (
-              <Link key={item.id} to={item.to} style={buttonStyle}>
-                {item.icon}
+              <Link
+                key={item.to}
+                to={item.to}
+                style={{
+                  padding: "0.65rem 0.85rem",
+                  borderRadius: "8px",
+                  fontSize: "0.92rem",
+                  fontWeight: isActive ? 700 : 500,
+                  color: isActive ? "#ffffff" : "rgba(255, 255, 255, 0.7)",
+                  textDecoration: "none",
+                  backgroundColor: isActive ? "rgba(229, 9, 20, 0.15)" : "transparent",
+                  borderLeft: isActive ? "3px solid #e50914" : "3px solid transparent",
+                }}
+              >
+                {item.label}
               </Link>
             );
-          }
-
-          return (
-            <button key={item.id} onClick={item.action} style={buttonStyle}>
-              {item.icon}
-            </button>
-          );
-        })}
-      </nav>
-    </>
+          })}
+        </nav>
+      )}
+    </header>
   );
 }

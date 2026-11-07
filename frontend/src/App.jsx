@@ -33,7 +33,7 @@ function AppContent() {
     <div style={{ minHeight: "100vh", backgroundColor: "#000000", color: "#ffffff" }}>
       <ScrollToTop />
 
-      {/* ArrowTV Floating Left Navigation Dock (and Bottom Dock on Mobile) */}
+      {/* Top Navigation Bar */}
       <ArrowNav
         onOpenSearch={() => setSearchModalOpen(true)}
         onOpenAuth={() => setAuthModalOpen(true)}
@@ -51,8 +51,8 @@ function AppContent() {
         onClose={() => setAuthModalOpen(false)}
       />
 
-      {/* Main Content Area (spaced for dock) */}
-      <main className="md:pl-[68px] pb-16 md:pb-0 transition-all duration-300">
+      {/* Main Content Area */}
+      <main className="w-full min-h-screen">
         <Routes>
           <Route path="/"          element={<Home />} />
           <Route path="/movies"    element={<Home />} />
