@@ -80,7 +80,7 @@ export default function ArrowNav({ onOpenSearch, onOpenAuth }) {
             style={{
               display: "flex",
               alignItems: "center",
-              gap: "0.6rem",
+              gap: "0.75rem",
               textDecoration: "none",
               color: "#ffffff",
             }}
@@ -90,16 +90,29 @@ export default function ArrowNav({ onOpenSearch, onOpenAuth }) {
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "center",
-                width: "36px",
-                height: "36px",
-                borderRadius: "10px",
-                background: "linear-gradient(135deg, #e50914 0%, #b80610 100%)",
-                boxShadow: "0 2px 14px rgba(229, 9, 20, 0.5)",
+                width: "38px",
+                height: "38px",
+                borderRadius: "11px",
+                background: "linear-gradient(135deg, #1f0406 0%, #0a0a0c 100%)",
+                border: "1px solid rgba(229, 9, 20, 0.45)",
+                boxShadow: "0 0 16px rgba(229, 9, 20, 0.35)",
+                position: "relative",
+                overflow: "hidden",
+                flexShrink: 0,
               }}
             >
-              {/* Arrow Icon */}
-              <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor">
-                <path d="M12 2L4 10h5v10h6V10h5L12 2z" transform="rotate(90 12 12)" />
+              {/* Aesthetic A-Kyite-Kyi Emblem */}
+              <svg viewBox="0 0 32 32" width="22" height="22" fill="none">
+                <defs>
+                  <linearGradient id="navBrandGrad" x1="0" y1="0" x2="32" y2="32">
+                    <stop offset="0%" stopColor="#ff3344" />
+                    <stop offset="50%" stopColor="#e50914" />
+                    <stop offset="100%" stopColor="#8a0008" />
+                  </linearGradient>
+                </defs>
+                <path d="M16 6 L7 25 L11.5 25 L16 14 Z" fill="url(#navBrandGrad)" />
+                <path d="M16 6 L16 14 L20.5 25 L25 25 Z" fill="#b0050e" />
+                <polygon points="14,13.5 19.5,17 14,20.5" fill="#ffffff" />
               </svg>
             </div>
             <span
@@ -109,12 +122,11 @@ export default function ArrowNav({ onOpenSearch, onOpenAuth }) {
                 fontWeight: 900,
                 letterSpacing: "-0.03em",
                 textTransform: "uppercase",
-                background: "linear-gradient(to right, #ffffff 60%, rgba(255, 255, 255, 0.7) 100%)",
-                WebkitBackgroundClip: "text",
-                WebkitTextFillColor: "transparent",
+                lineHeight: 1,
+                color: "#ffffff",
               }}
             >
-              Arrow<span style={{ color: "#e50914", WebkitTextFillColor: "#e50914" }}>TV</span>
+              A-Kyite-<span style={{ color: "#e50914" }}>Kyii</span>
             </span>
           </Link>
 

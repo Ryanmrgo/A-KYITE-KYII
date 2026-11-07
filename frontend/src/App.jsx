@@ -39,7 +39,7 @@ function AppContent() {
         onOpenAuth={() => setAuthModalOpen(true)}
       />
 
-      {/* ArrowTV Global Instant Search Modal */}
+      {/* Global Instant Search Modal */}
       <ArrowSearchModal
         isOpen={searchModalOpen}
         onClose={() => setSearchModalOpen(false)}

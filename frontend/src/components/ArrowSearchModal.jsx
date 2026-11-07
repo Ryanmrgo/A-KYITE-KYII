@@ -186,7 +186,7 @@ export default function ArrowSearchModal({ isOpen, onClose }) {
         {/* Results Body */}
         {loading && (
           <div style={{ textAlign: "center", padding: "3rem 0", color: "rgba(255,255,255,0.4)", fontSize: "0.95rem" }}>
-            Searching ArrowTV database...
+            Searching A-Kyite-Kyii database...
           </div>
         )}
 
