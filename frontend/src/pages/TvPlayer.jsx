@@ -7,6 +7,7 @@ import { db } from "../firebase";
 import { doc, updateDoc, arrayUnion } from "firebase/firestore";
 import { useWatchProgress } from "../hooks/useWatchProgress";
 import ServerSelector from "../components/ServerSelector";
+import RecommendationsSection from "../components/RecommendationsSection";
 import { STREAMING_SERVERS, DEFAULT_SERVER_ID } from "../data/streamingServers";
 
 const S = {
@@ -319,6 +320,9 @@ export default function TvPlayer() {
 
           </div>
         )}
+
+        {/* More Like This (Recommendations) */}
+        <RecommendationsSection mediaType="tv" id={seriesId} />
       </div>
       <style>{`
         @keyframes pulse-bg { 0%,100%{background-color:#1e1e1e} 50%{background-color:#252525} }

@@ -6,6 +6,7 @@ import { db } from "../firebase";
 import { doc, updateDoc, arrayUnion } from "firebase/firestore";
 import { useWatchProgress, getSavedProgress } from "../hooks/useWatchProgress";
 import ServerSelector from "../components/ServerSelector";
+import RecommendationsSection from "../components/RecommendationsSection";
 import { STREAMING_SERVERS, DEFAULT_SERVER_ID } from "../data/streamingServers";
 
 const MOVIE_ID = 533535;
@@ -269,6 +270,9 @@ export default function MoviePlayer() {
             </div>
           </div>
         )}
+
+        {/* More Like This (Recommendations) */}
+        <RecommendationsSection mediaType="movie" id={movieId} />
       </div>
       <style>{`
         @keyframes pulse-bg { 0%,100%{background-color:#1e1e1e} 50%{background-color:#252525} }

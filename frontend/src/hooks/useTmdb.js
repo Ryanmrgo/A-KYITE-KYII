@@ -77,6 +77,84 @@ export function useSearch(query) {
   return { ...resource, data };
 }
 
+export function useRecommendations(mediaType, id) {
+  const [data, setData] = useState([]);
+  const [loading, setLoading] = useState(Boolean(id && mediaType));
+  const [error, setError] = useState(null);
+
+  useEffect(() => {
+    if (!id || !mediaType) return;
+    let active = true;
+    setLoading(true);
+
+    const controller = new AbortController();
+
+    tmdbFetch(`/${mediaType}/${id}/recommendations`, controller.signal)
+      .then((res) => {
+        if (!active) return;
+        const results = res.results || [];
+        if (results.length >= 6) {
+          setData(results);
+          setLoading(false);
+        } else {
+          tmdbFetch(`/${mediaType}/${id}/similar`, controller.signal)
+            .then((simRes) => {
+              if (!active) return;
+              const combined = [...results, ...(simRes.results || [])];
+              const seen = new Set();
+              const unique = combined.filter((it) => {
+                if (seen.has(it.id)) return false;
+                seen.add(it.id);
+                return true;
+              });
+              setData(unique);
+              setLoading(false);
+            })
+            .catch(() => {
+              if (active) {
+                setData(results);
+                setLoading(false);
+              }
+            });
+        }
+      })
+      .catch((err) => {
+        if (!active || err.name === 'AbortError') return;
+        tmdbFetch(`/${mediaType}/${id}/similar`, controller.signal)
+          .then((simRes) => {
+            if (active) {
+              setData(simRes.results || []);
+              setLoading(false);
+            }
+          })
+          .catch((simErr) => {
+            if (active) {
+              setError(simErr.message);
+              setLoading(false);
+            }
+          });
+      });
+
+    return () => {
+      active = false;
+      controller.abort();
+    };
+  }, [mediaType, id]);
+
+  return { data, loading, error };
+}
+
+export async function fetchDiscover({ type = 'movie', genreId, sortBy = 'popularity.desc', page = 1 }) {
+  let path = `/discover/${type}?page=${page}&sort_by=${sortBy}&include_adult=false`;
+  if (genreId) {
+    path += `&with_genres=${genreId}`;
+  }
+  if (sortBy.startsWith('vote_average')) {
+    path += `&vote_count.gte=100`;
+  }
+  return tmdbFetch(path);
+}
+
 export const posterUrl = (p, s = 'w500') => p ? IMAGE_BASE + '/' + s + p : null;
 export const backdropUrl = (p, s = 'w1280') => p ? IMAGE_BASE + '/' + s + p : null;
 export const stillUrl = (p, s = 'w300') => p ? IMAGE_BASE + '/' + s + p : null;

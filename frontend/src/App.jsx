@@ -6,6 +6,7 @@ import ArrowSearchModal from "./components/ArrowSearchModal";
 import AuthModal from "./components/AuthModal";
 import ScrollToTop from "./components/ScrollToTop";
 import Home from "./pages/Home";
+import Catalog from "./pages/Catalog";
 import MoviePlayer from "./pages/MoviePlayer";
 import TvPlayer from "./pages/TvPlayer";
 import Favorites from "./pages/Favorites";
@@ -55,8 +56,8 @@ function AppContent() {
       <main className="w-full min-h-screen">
         <Routes>
           <Route path="/"          element={<Home />} />
-          <Route path="/movies"    element={<Home />} />
-          <Route path="/tv"        element={<Home />} />
+          <Route path="/movies"    element={<Catalog type="movie" />} />
+          <Route path="/tv"        element={<Catalog type="tv" />} />
           <Route path="/movie/:id" element={<MoviePlayer />} />
           <Route path="/tv/:id"    element={<TvPlayer />} />
           <Route path="/favorites" element={<Favorites />} />

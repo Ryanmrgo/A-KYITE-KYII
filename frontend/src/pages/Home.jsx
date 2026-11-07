@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from "react";
-import { useNavigate, useLocation } from "react-router-dom";
+import { useNavigate, useLocation, Link } from "react-router-dom";
 import { useTrending, backdropUrl, posterUrl } from "../hooks/useTmdb";
 import { useAuth } from "../contexts/AuthContext";
 import { db } from "../firebase";
@@ -374,7 +374,7 @@ const SCROLL_BY  = (CARD_WIDTH + CARD_GAP) * 4; // scroll 4 at a time
 const MAX_ITEMS  = 10;
 
 /* ── Section UI (Generic Wrapper) ─────────────────────── */
-function SectionUI({ title, loading, items, renderItem }) {
+function SectionUI({ title, loading, items, renderItem, exploreLink }) {
   const rowRef = useRef(null);
   const [atStart, setAtStart] = useState(true);
   const [atEnd,   setAtEnd]   = useState(false);
@@ -419,7 +419,25 @@ function SectionUI({ title, loading, items, renderItem }) {
             {title}
           </h2>
         </div>
-
+        {exploreLink && (
+          <Link
+            to={exploreLink}
+            style={{
+              fontSize: "0.84rem",
+              fontWeight: 600,
+              color: S.muted,
+              textDecoration: "none",
+              display: "flex",
+              alignItems: "center",
+              gap: "0.25rem",
+              transition: "color 0.2s",
+            }}
+            onMouseEnter={(e) => (e.currentTarget.style.color = "#ffffff")}
+            onMouseLeave={(e) => (e.currentTarget.style.color = S.muted)}
+          >
+            Explore All →
+          </Link>
+        )}
       </div>
 
       {/* Track */}
@@ -507,6 +525,7 @@ function TrendingSection({ title, items, type, loading }) {
       title={title}
       loading={loading}
       items={visible}
+      exploreLink={type === "movie" ? "/movies" : "/tv"}
       renderItem={(item, i) => <MovieCard item={item} type={type} index={i} />}
     />
   );
